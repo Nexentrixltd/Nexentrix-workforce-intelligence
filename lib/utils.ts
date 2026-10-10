@@ -84,9 +84,14 @@ export const roleRoutes: Record<Role, string> = {
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ADMIN: [
     "VIEW_ADMIN_DASHBOARD",
+    "VIEW_USERS",
     "CREATE_USER",
     "EDIT_USER",
-    "DELETE_USER",
+    "DEACTIVATE_USER",
+    "RESET_USER_PASSWORD",
+    "REVOKE_USER_SESSIONS",
+    "VIEW_DEPARTMENTS",
+    "MANAGE_DEPARTMENTS",
     "VIEW_ALL_REPORTS",
     "EXPORT_REPORTS",
     "VIEW_ANALYTICS",
@@ -94,6 +99,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ],
   HR: [
     "VIEW_HR_DASHBOARD",
+    "VIEW_USERS",
+    "VIEW_DEPARTMENTS",
     "VIEW_ALL_REPORTS",
     "EXPORT_REPORTS",
     "VIEW_ANALYTICS",
@@ -219,8 +226,8 @@ export const dashboardNav: DashboardNavSection[] = [
     label: "Management",
     items: [
       {
-        label: "Users",
-        href: "/admin/users",
+        label: "Employees",
+        href: "/admin/employees",
         iconOutline: IconUsers,
         iconFilled: IconUsersGroup,
         roles: ROLES.ADMIN_ONLY,

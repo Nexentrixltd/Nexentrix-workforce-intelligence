@@ -5,10 +5,7 @@ export const signInSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .pipe(z.email({ error: "Enter a valid work email address" }))
-    .refine((email) => email.endsWith("@nexius.com"), {
-      message: "Only Nexius work emails are allowed",
-    }),
+    .pipe(z.email({ error: "Enter a valid work email address" })),
 
   password: z
     .string()
@@ -19,3 +16,4 @@ export const signInSchema = z.object({
 });
 
 export type SignInInput = z.infer<typeof signInSchema>;
+

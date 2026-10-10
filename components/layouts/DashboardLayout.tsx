@@ -23,8 +23,12 @@ export default function DashboardClientLayout({
   }, [hasFetchedUser, isLoading, fetchUser]);
 
   useEffect(() => {
-    if (hasFetchedUser && !isLoading && !user) {
+    if (!hasFetchedUser || isLoading) return;
+
+    if (!user) {
       router.replace("/auth");
+    } else if (user.isFirstLogin) {
+      router.replace("/change-password");
     }
   }, [hasFetchedUser, isLoading, user, router]);
 
@@ -38,7 +42,7 @@ export default function DashboardClientLayout({
     );
   }
 
-  if (!user) return null;
+  if (!user || user.isFirstLogin) return null;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -47,7 +51,7 @@ export default function DashboardClientLayout({
       <div className="flex flex-1 flex-col">
         <Header />
 
-        <main className="flex-1 md:ml-72 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-20 md:ml-72 md:p-6 lg:p-8">
           <div className="mx-auto w-full">{children}</div>
         </main>
       </div>

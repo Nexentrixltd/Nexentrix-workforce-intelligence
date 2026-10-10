@@ -28,12 +28,12 @@ export async function POST(req: Request) {
     const { password, remember } = parsed.data;
     const { ip, userAgent } = getClientInfo(req);
 
-    if (!email.endsWith("@nexius.com")) {
-      return NextResponse.json(
-        { message: "Enter a valid Nexius email" },
-        { status: 400 },
-      );
-    }
+    // if (!email.endsWith("@nexius.com")) {
+    //   return NextResponse.json(
+    //     { message: "Enter a valid Nexius email" },
+    //     { status: 400 },
+    //   );
+    // }
 
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -55,6 +55,13 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: "Invalid credentials" },
         { status: 401 },
+      );
+    }
+
+    if (user.deactivatedAt) {
+      return NextResponse.json(
+        { error: "This account has been deactivated" },
+        { status: 403 },
       );
     }
 

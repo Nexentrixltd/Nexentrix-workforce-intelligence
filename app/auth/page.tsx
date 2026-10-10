@@ -174,8 +174,7 @@ export default function AuthPage() {
             <div className="h-full w-full bg-[radial-gradient(circle,rgba(6,182,212,0.18),transparent_70%)] blur-[110px]" />
           </div>
 
-          {/* Logo watermark */}
-          <div
+          {/* <div
             className="pointer-events-none absolute -bottom-24 -right-24 h-140 w-140 bg-primary-foreground opacity-[0.06]"
             style={{
               maskImage: "url(/logo-mark.svg)",
@@ -185,7 +184,7 @@ export default function AuthPage() {
               WebkitMaskRepeat: "no-repeat",
               WebkitMaskSize: "contain",
             }}
-          />
+          /> */}
 
           <div />
 

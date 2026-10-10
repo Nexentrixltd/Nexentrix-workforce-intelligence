@@ -11,7 +11,7 @@ import {
     Filter,
 } from "lucide-react";
 import { Department } from "@/types/stores";
-import ConfirmDeleteDepartmentModal from "./confirmDeleteDepartmentModal";
+import ConfirmDeleteDepartmentModal from "./ConfirmDeleteDepartmentModal";
 import EditDepartmentModal, { DepartmentToEdit } from "./EditDepartmentModal";
 
 const departmentColors = [

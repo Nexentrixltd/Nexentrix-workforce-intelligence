@@ -1,30 +1,79 @@
+"use client";
+
+import { useState } from "react";
+import { Bell, Search, X } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
-import { Bell, Search } from "lucide-react";
-import React from "react";
 import ThemeToggle from "./ThemeToggle";
 
 const Header = () => {
   const user = useUserStore((state) => state.user);
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name ?? 'User')}&background=random`;
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    user?.name ?? "User"
+  )}&background=random`;
+
   return (
-    <header className="h-16 px-6 ml-72 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 backdrop-blur-md">
-      <div />
+    <header className="fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white/70 px-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/50 sm:px-6 md:relative md:ml-72">
+      {searchOpen ? (
+        // Mobile expanded search
+        <div className="flex w-full items-center gap-2 sm:hidden">
+          <div className="flex flex-1 items-center gap-2 rounded-lg border border-transparent bg-surface/50 px-3 py-2 transition focus-within:border-primary/30">
+            <Search className="h-4 w-4 shrink-0 text-slate-400" />
+            <input
+              type="text"
+              autoFocus
+              aria-label="Search"
+              placeholder="Search"
+              className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setSearchOpen(false)}
+            aria-label="Close search"
+            className="cursor-pointer rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <X className="h-5 w-5 text-slate-500" />
+          </button>
+        </div>
+      ) : null}
 
-      <div className="flex items-center gap-5">
-        <div className="flex items-center gap-2 bg-surface/50 border border-transparent focus-within:border-primary/30 rounded-lg px-3 py-2 w-64 transition">
-          <Search className="w-4 h-4 text-slate-400" />
+      <div className={searchOpen ? "hidden sm:block" : "block"} />
 
+      <div
+        className={`items-center gap-2 sm:gap-4 lg:gap-5 ${
+          searchOpen ? "hidden sm:flex" : "flex"
+        }`}
+      >
+        {/* Search: input from sm up */}
+        <div className="hidden w-44 items-center gap-2 rounded-lg border border-transparent bg-surface/50 px-3 py-2 transition focus-within:border-primary/30 sm:flex lg:w-64">
+          <Search className="h-4 w-4 shrink-0 text-slate-400" />
           <input
             type="text"
+            aria-label="Search"
             placeholder="Search"
-            className="bg-transparent outline-none text-sm w-full placeholder:text-slate-400 text-slate-700 dark:text-slate-200"
+            className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
           />
         </div>
 
-        <button className="relative cursor-pointer p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-          <Bell className="w-5 h-5 text-primary" />
+        {/* Search: icon on mobile */}
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          aria-label="Open search"
+          className="cursor-pointer rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 sm:hidden"
+        >
+          <Search className="h-5 w-5 text-primary" />
+        </button>
 
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500" />
+        <button
+          type="button"
+          aria-label="Notifications"
+          className="relative cursor-pointer rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <Bell className="h-5 w-5 text-primary" />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500" />
         </button>
 
         <ThemeToggle />
@@ -32,7 +81,7 @@ const Header = () => {
         <img
           src={avatarUrl}
           alt={user?.name || "User"}
-          className="h-10 w-10 rounded object-cover border border-border/50"
+          className="h-9 w-9 shrink-0 hidden md:flex rounded border border-border/50 object-cover sm:h-10 sm:w-10"
         />
       </div>
     </header>

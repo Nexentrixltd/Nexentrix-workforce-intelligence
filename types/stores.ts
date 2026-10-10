@@ -17,6 +17,7 @@ export type Department = {
   members: number;
   createdAt: string;
   updatedAt: string;
+  isFirstLogin?: boolean;
 };
 
 export type SafeUser = Omit<PrismaUser, "passwordHash">;

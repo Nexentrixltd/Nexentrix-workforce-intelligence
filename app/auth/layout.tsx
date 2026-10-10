@@ -19,5 +19,5 @@ export default function LoginLayout({ children }: { children: ReactNode }) {
     }
   }, [role, router]);
 
-  return { children }
+  return <>{children}</>
 }
