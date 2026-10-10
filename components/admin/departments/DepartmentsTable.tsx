@@ -11,6 +11,8 @@ import {
     Filter,
 } from "lucide-react";
 import { Department } from "@/types/stores";
+import ConfirmDeleteDepartmentModal from "./confirmDeleteDepartmentModal";
+import EditDepartmentModal, { DepartmentToEdit } from "./EditDepartmentModal";
 
 const departmentColors = [
     "bg-indigo-600",
@@ -23,6 +25,12 @@ const departmentColors = [
     "bg-orange-600",
 ];
 
+interface DepartmentToDelete {
+    id: string;
+    name: string;
+    members: number;
+}
+
 export function DepartmentsTable({
     departments,
 }: {
@@ -30,6 +38,8 @@ export function DepartmentsTable({
 }) {
     const [search, setSearch] = useState("");
     const [openMenu, setOpenMenu] = useState<string | null>(null);
+    const [toDelete, setToDelete] = useState<DepartmentToDelete | null>(null);
+    const [toEdit, setToEdit] = useState<DepartmentToEdit | null>(null);
 
     const filteredDepartments = departments.filter((department) =>
         [department.name, department.code].some((value) =>
@@ -154,22 +164,18 @@ export function DepartmentsTable({
                                                 </button>
 
                                                 <button
-                                                    onClick={() => {
-                                                        window.location.href =
-                                                            `/admin/departments/${department.id}/edit`;
-                                                    }}
+                                                    onClick={() =>
+    setToEdit({ id: department.id, name: department.name, code: department.code })
+  }
                                                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
                                                 >
                                                     <Pencil size={15} /> Edit
                                                 </button>
 
                                                 <button
-                                                    onClick={() => {
-                                                        setOpenMenu(null);
-                                                        window.alert(
-                                                            "Connect this button to your department deletion logic."
-                                                        );
-                                                    }}
+                                                    onClick={() =>
+                                                        setToDelete({ id: department.id, name: department.name, members: department.members })
+                                                    }
                                                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                                                 >
                                                     <Trash2 size={15} /> Delete
@@ -204,6 +210,13 @@ export function DepartmentsTable({
             <div className="border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
                 Showing {filteredDepartments.length} of {departments.length} departments
             </div>
+
+            <ConfirmDeleteDepartmentModal
+                department={toDelete}
+                onClose={() => setToDelete(null)}
+            />
+
+            <EditDepartmentModal department={toEdit} onClose={() => setToEdit(null)} />
         </section>
     );
 }

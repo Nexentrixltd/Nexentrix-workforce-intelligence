@@ -7,6 +7,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { DepartmentsTable } from "@/components/admin/departments/DepartmentsTable";
 import { Error } from "@/components/ui/Error";
+import { AddDepartmentButton } from "@/components/admin/departments/AddDepartmentButton";
 
 export default async function AdminDepartmentsPage() {
   let data;
@@ -87,7 +88,7 @@ export default async function AdminDepartmentsPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl space-y-7">
+      <div className="mx-auto w-full md:max-w-7xl space-y-7">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-4xl tracking-tight font-triakis">
@@ -99,13 +100,7 @@ export default async function AdminDepartmentsPage() {
             </p>
           </div>
 
-          <a
-            href="/admin/departments/new"
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-background transition hover:bg-primary/90"
-          >
-            <span className="text-lg leading-none">+</span>
-            Add Department
-          </a>
+         <AddDepartmentButton />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

@@ -19,5 +19,5 @@ export default function LoginLayout({ children }: { children: ReactNode }) {
     }
   }, [role, router]);
 
-  return <QueryProvider>{children}</QueryProvider>;
+  return { children }
 }
