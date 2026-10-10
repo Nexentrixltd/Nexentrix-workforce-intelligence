@@ -25,7 +25,7 @@ export default function DashboardSidebar() {
 
   if (!user) return null;
 
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+  const avatarUrl = user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(
     user?.name || "User",
   )}&background=random`;
 

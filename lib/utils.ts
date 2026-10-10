@@ -246,6 +246,20 @@ export const dashboardNav: DashboardNavSection[] = [
         iconFilled: IconFolderFilled,
         roles: ROLES.ADMIN_ONLY,
       },
+      {
+        label: "Employees",
+        href: "/hr/employees",
+        iconOutline: IconUsers,
+        iconFilled: IconUsersGroup,
+        roles: ROLES.HR_ONLY,
+      },
+      {
+        label: "Departments",
+        href: "/hr/departments",
+        iconOutline: IconBuilding,
+        iconFilled: IconBuildingBank,
+        roles: ROLES.HR_ONLY,
+      },
     ],
   },
 
