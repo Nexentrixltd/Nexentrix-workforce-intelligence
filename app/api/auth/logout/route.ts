@@ -1,22 +1,20 @@
-import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { verifySession } from "@/lib/auth/jwt";
+import { prisma } from "@/lib/prisma";
 
 export async function POST() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("sessionToken")?.value;
+  const token = (await cookies()).get("sessionToken")?.value;
+  const payload = token ? await verifySession(token) : null;
 
-  if (sessionToken) {
-    await prisma.session.delete({
-      where: { sessionToken },
+  if (payload) {
+    await prisma.session.updateMany({
+      where: { id: payload.sid, userId: payload.sub, revokedAt: null },
+      data: { revokedAt: new Date() },
     });
   }
 
-  const response = NextResponse.json({ success: true });
-
-  response.cookies.set("sessionToken", "", {
-    expires: new Date(0),
-  });
-
-  return response;
+  const res = NextResponse.json({ success: true });
+  res.cookies.delete("sessionToken");
+  return res;
 }

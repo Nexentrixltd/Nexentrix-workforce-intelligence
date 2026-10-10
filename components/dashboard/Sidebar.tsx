@@ -1,8 +1,9 @@
 "use client";
 
+import React, { useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, ChevronRight } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 import { cn, dashboardNav } from "@/lib/utils";
 import { Role } from "@/types/rbac";
@@ -21,16 +22,23 @@ export default function DashboardSidebar() {
   const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
   const isLoggingOut = useUserStore((state) => state.isLoggingOut);
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
 
   if (!user) return null;
 
-  const visibleSections = dashboardNav
-    .map((section) => ({
-      ...section,
-      items: section.items.filter((item) => item.roles.includes(user.role)),
-    }))
-    .filter((section) => section.items.length > 0);
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    user?.name || "User",
+  )}&background=random`;
+
+  const visibleSections = useMemo(() => {
+    return dashboardNav
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) =>
+          user?.role ? item.roles.includes(user.role as Role) : false,
+        ),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [user?.role]);
 
   const handleLogout = async () => {
     try {
@@ -41,20 +49,35 @@ export default function DashboardSidebar() {
     }
   };
 
-  const isActiveLink = (href: string) => {
+  const getActiveHref = (items: { href: string }[]) => {
     const cleanPath = pathname.replace(/\/$/, "");
-    const cleanHref = href.replace(/\/$/, "");
 
-    if (cleanPath === cleanHref) return true;
-    return cleanPath.startsWith(cleanHref + "/");
+    let activeHref = "";
+    let maxLength = 0;
+
+    for (const item of items) {
+      const cleanHref = item.href.replace(/\/$/, "");
+
+      const isMatch =
+        cleanPath === cleanHref ||
+        (cleanPath.startsWith(cleanHref) &&
+          cleanPath.charAt(cleanHref.length) === "/");
+
+      if (isMatch && cleanHref.length > maxLength) {
+        activeHref = cleanHref;
+        maxLength = cleanHref.length;
+      }
+    }
+
+    return activeHref;
   };
 
   return (
-    <aside className="hidden h-screen w-72 shrink-0 border-r border-border/60 bg-surface lg:flex lg:flex-col">
+    <aside className="hidden fixed left-0 top-0 bottom-0 h-screen w-72 shrink-0 border-r border-border/60 bg-surface lg:flex lg:flex-col">
       <div className="border-b border-border/60 px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center">
-           <img src="/nexentrix.png" alt="" />
+            <img src="/nexentrix.png" alt="logo" />
           </div>
 
           <div className="min-w-0">
@@ -72,23 +95,25 @@ export default function DashboardSidebar() {
         <div className="space-y-6">
           {visibleSections.map((section) => (
             <div key={section.label}>
-              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-text-primary">
                 {section.label}
               </p>
 
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const active = isActiveLink(item.href);
+                  const activeHref = getActiveHref(section.items);
+                  const active = activeHref === item.href.replace(/\/$/, "");
                   const Icon = active ? item.iconFilled : item.iconOutline;
 
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
+                      aria-current={active ? "page" : undefined}
                       className={cn(
                         "group flex items-center justify-between rounded px-3 py-3 text-sm transition-all duration-200",
                         active
-                          ? "bg-background text-primary"
+                          ? "bg-background text-text-primary"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
@@ -96,11 +121,17 @@ export default function DashboardSidebar() {
                         <Icon
                           className={cn(
                             "h-5 w-5 shrink-0",
-                            active ? "text-primary" : "text-muted-foreground",
+                            active
+                              ? "text-text-primary"
+                              : "text-muted-foreground",
                           )}
                         />
+
                         <span
-                          className={`truncate ${active ? " font-semibold" : "font-medium"}`}
+                          className={cn(
+                            "truncate",
+                            active ? "font-semibold" : "font-medium",
+                          )}
                         >
                           {item.label}
                         </span>
@@ -114,7 +145,7 @@ export default function DashboardSidebar() {
         </div>
       </nav>
 
-      <div className="w-full gap-4 flex flex-col items-start justify-between p-4">
+      <div className="w-full flex flex-col items-start justify-between gap-4 p-4">
         <div className="flex gap-2 w-full">
           <img
             src={avatarUrl}
@@ -136,7 +167,7 @@ export default function DashboardSidebar() {
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="flex w-full items-center justify-center gap-3 cursor-pointer rounded px-3 py-2.5 text-sm font-medium text-red-600 transition hover:bg-background disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-red-950/30"
+          className="flex w-full cursor-pointer items-center justify-center gap-3 rounded px-3 py-2.5 text-sm font-medium text-red-600 transition hover:bg-background disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-red-950/30"
         >
           <LogOut className="h-4 w-4" />
           <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>

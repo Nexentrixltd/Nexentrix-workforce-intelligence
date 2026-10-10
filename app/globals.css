@@ -52,7 +52,7 @@
   --sidebar-ring: #fca311;
 
   --surface: #e5e5e5;
-  --primary: #14213d;
+  --text-primary: #14213d;
   --secondary: #000000;
   --gold: #fca311;
   --navy: #14213d;
@@ -124,8 +124,8 @@
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #ffffff;
+  --background: #020617;
+  --foreground: #f8fafc;
 
   --card: #14213d;
   --card-foreground: #ffffff;
@@ -134,13 +134,13 @@
   --popover-foreground: #ffffff;
 
   --primary: #fca311;
-  --primary-foreground: #000000;
+  --primary-foreground: #020617;
 
   --secondary: #14213d;
   --secondary-foreground: #ffffff;
 
-  --accent: #e5e5e5;
-  --accent-foreground: #000000;
+  --accent: #14213d;
+  --accent-foreground: #ffffff;
 
   --muted: #14213d;
   --muted-foreground: #e5e5e5;
@@ -166,10 +166,9 @@
   --sidebar-border: rgba(229, 229, 229, 0.16);
   --sidebar-ring: #fca311;
 
-  /* extra custom tokens */
   --surface: #14213d;
   --text-primary: #ffffff;
-  --text-secondary: #fca311;
+  --text-accent: #fca311;
   --gold: #fca311;
   --navy: #14213d;
   --black: #000000;
@@ -184,16 +183,23 @@
   html {
     @apply font-sans;
   }
-
-  body {
-    @apply bg-background text-foreground;
-  }
 }
 
 body {
   font-family: var(--font-body);
+  color: var(--text-primary);
 }
 
 .font-triakis {
   font-family: var(--font-heading);
 }
+
+.input {
+  @apply w-full px-4 py-2.5 rounded-xl bg-surface border border-border text-primary outline-none focus:ring-2 focus:ring-primary/30;
+}
+
+.textarea {
+  @apply w-full px-4 py-2.5 rounded-xl bg-surface border border-border text-primary outline-none focus:ring-2 focus:ring-primary/30 min-h-25;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));

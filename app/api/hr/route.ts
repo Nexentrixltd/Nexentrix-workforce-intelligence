@@ -1,8 +1,8 @@
-import { requireRole } from "@/lib/auth";
+import { requireApiRole } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const auth = await requireRole(["HR"]);
+  const auth = await requireApiRole(["HR"]);
 
   if (!auth.ok) return auth.response;
 

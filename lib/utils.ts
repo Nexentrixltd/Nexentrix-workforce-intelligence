@@ -75,10 +75,10 @@ export const departments = [
 ];
 
 export const roleRoutes: Record<Role, string> = {
-  ADMIN: "/dashboard/admin",
-  HR: "/dashboard/hr",
-  TEAM_LEAD: "/dashboard/team-lead",
-  STAFF: "/dashboard/staff",
+  ADMIN: "/admin/dashboard",
+  HR: "/hr/dashboard",
+  TEAM_LEAD: "/team-lead/dashboard",
+  STAFF: "/staff/dashboard",
 };
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -129,12 +129,21 @@ export type DashboardNavItem = {
   href: string;
   iconOutline: Icon;
   iconFilled: Icon;
-  roles: ("ADMIN" | "HR" | "STAFF" | "TEAM_LEAD")[];
+  roles: readonly Role[];
 };
 
 export type DashboardNavSection = {
   label: string;
   items: DashboardNavItem[];
+};
+
+export const ROLES = {
+  ALL: ["ADMIN", "HR", "STAFF", "TEAM_LEAD"] as const,
+  ADMIN_HR_TEAM: ["ADMIN", "HR", "TEAM_LEAD"] as const,
+  ADMIN_ONLY: ["ADMIN"] as const,
+  STAFF_ONLY: ["STAFF"] as const,
+  TEAM_LEAD_ONLY: ["TEAM_LEAD"] as const,
+  HR_ONLY: ["HR"] as const,
 };
 
 export const dashboardNav: DashboardNavSection[] = [
@@ -143,10 +152,31 @@ export const dashboardNav: DashboardNavSection[] = [
     items: [
       {
         label: "Dashboard",
-        href: "/dashboard",
+        href: "/admin/dashboard",
         iconOutline: IconLayoutDashboard,
         iconFilled: IconLayoutDashboardFilled,
-        roles: ["ADMIN", "HR", "STAFF", "TEAM_LEAD"],
+        roles: ROLES.ADMIN_ONLY,
+      },
+      {
+        label: "Dashboard",
+        href: "/staff/dashboard",
+        iconOutline: IconLayoutDashboard,
+        iconFilled: IconLayoutDashboardFilled,
+        roles: ROLES.STAFF_ONLY,
+      },
+      {
+        label: "Dashboard",
+        href: "/hr/dashboard",
+        iconOutline: IconLayoutDashboard,
+        iconFilled: IconLayoutDashboardFilled,
+        roles: ROLES.HR_ONLY,
+      },
+      {
+        label: "Dashboard",
+        href: "/team-lead/dashboard",
+        iconOutline: IconLayoutDashboard,
+        iconFilled: IconLayoutDashboardFilled,
+        roles: ROLES.TEAM_LEAD_ONLY,
       },
     ],
   },
@@ -156,31 +186,31 @@ export const dashboardNav: DashboardNavSection[] = [
     items: [
       {
         label: "Submit Report",
-        href: "/reports/new",
+        href: "/staff/reports/new",
         iconOutline: IconFilePlus,
         iconFilled: IconFilesFilled,
-        roles: ["STAFF"],
+        roles: ROLES.STAFF_ONLY,
       },
       {
         label: "My Reports",
-        href: "/reports/history",
+        href: "/staff/reports/history",
         iconOutline: IconHistory,
         iconFilled: IconHistoryToggle,
-        roles: ["STAFF"],
+        roles: ROLES.STAFF_ONLY,
       },
       {
         label: "Reports",
-        href: "/dashboard/reports",
+        href: "/reports/all",
         iconOutline: IconFileText,
         iconFilled: IconFileTextFilled,
-        roles: ["ADMIN", "HR", "TEAM_LEAD"],
+        roles: ROLES.ADMIN_HR_TEAM,
       },
       {
         label: "Approvals",
-        href: "/dashboard/approvals",
+        href: "/team-lead/approvals",
         iconOutline: IconClipboardCheck,
         iconFilled: IconClipboardCheckFilled,
-        roles: ["TEAM_LEAD"],
+        roles: ROLES.TEAM_LEAD_ONLY,
       },
     ],
   },
@@ -190,24 +220,24 @@ export const dashboardNav: DashboardNavSection[] = [
     items: [
       {
         label: "Users",
-        href: "/dashboard/users",
+        href: "/admin/users",
         iconOutline: IconUsers,
         iconFilled: IconUsersGroup,
-        roles: ["ADMIN"],
+        roles: ROLES.ADMIN_ONLY,
       },
       {
         label: "Departments",
-        href: "/dashboard/departments",
+        href: "/admin/departments",
         iconOutline: IconBuilding,
         iconFilled: IconBuildingBank,
-        roles: ["ADMIN"],
+        roles: ROLES.ADMIN_ONLY,
       },
       {
         label: "Projects",
-        href: "/dashboard/projects",
+        href: "/admin/projects",
         iconOutline: IconFolders,
         iconFilled: IconFolderFilled,
-        roles: ["ADMIN"],
+        roles: ROLES.ADMIN_ONLY,
       },
     ],
   },
@@ -217,31 +247,31 @@ export const dashboardNav: DashboardNavSection[] = [
     items: [
       {
         label: "Analytics",
-        href: "/dashboard/analytics",
+        href: "/analytics",
         iconOutline: IconChartBar,
         iconFilled: IconChartAreaFilled,
-        roles: ["ADMIN", "HR", "TEAM_LEAD"],
+        roles: ROLES.ADMIN_HR_TEAM,
       },
       {
         label: "Team Performance",
-        href: "/dashboard/team-lead/performance",
+        href: "/team-lead/performance",
         iconOutline: IconChartLine,
         iconFilled: IconChartAreaFilled,
-        roles: ["TEAM_LEAD"],
+        roles: ROLES.TEAM_LEAD_ONLY,
       },
       {
         label: "Performance",
-        href: "/dashboard/hr/perfomance",
+        href: "/hr/performance",
         iconOutline: IconActivity,
         iconFilled: IconActivityHeartbeat,
-        roles: ["HR"],
+        roles: ROLES.HR_ONLY,
       },
       {
         label: "Consistency",
-        href: "/dashboard/consistency",
+        href: "/hr/consistency",
         iconOutline: IconActivity,
         iconFilled: IconActivityHeartbeat,
-        roles: ["HR"],
+        roles: ROLES.HR_ONLY,
       },
     ],
   },
@@ -251,24 +281,24 @@ export const dashboardNav: DashboardNavSection[] = [
     items: [
       {
         label: "Exports",
-        href: "/dashboard/exports",
+        href: "/exports",
         iconOutline: IconDownload,
         iconFilled: IconDownloadFilled,
-        roles: ["ADMIN", "HR"],
+        roles: ROLES.ADMIN_HR_TEAM,
       },
       {
         label: "Notifications",
         href: "/dashboard/notifications",
         iconOutline: IconBell,
         iconFilled: IconBellFilled,
-        roles: ["ADMIN"],
+        roles: ROLES.ADMIN_ONLY,
       },
       {
         label: "Settings",
         href: "/dashboard/settings",
         iconOutline: IconSettings,
         iconFilled: IconSettingsFilled,
-        roles: ["ADMIN", "STAFF", "HR", "TEAM_LEAD"],
+        roles: ROLES.ALL,
       },
     ],
   },

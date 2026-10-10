@@ -14,8 +14,9 @@ export type Department = {
   id: string;
   name: string;
   code: string;
-  createdAt: Date;
-  updatedAt: Date;
+  members: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type SafeUser = Omit<PrismaUser, "passwordHash">;

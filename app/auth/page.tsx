@@ -12,9 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signInSchema, type SignInInput } from "@/lib/validations/auth";
-import { LoginResponse } from "@/types/rbac";
 import { useUserStore } from "@/store/userStore";
-import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,7 +22,6 @@ export default function AuthPage() {
     handleSubmit,
     setValue,
     watch,
-    setError,
     clearErrors,
     formState: { errors },
   } = useForm<SignInInput>({
@@ -37,8 +34,7 @@ export default function AuthPage() {
   });
 
   const remember = watch("remember");
-  const { login, error } = useUserStore();
-  const router = useRouter();
+  const { login } = useUserStore();
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -49,13 +45,10 @@ export default function AuthPage() {
       toast.success("Access granted", {
         description: `Welcome back ${data.user?.name ?? ""}`.trim(),
       });
-
-      router.push("/dashboard");
     },
 
-    onError: (error: any) => {
+    onError: () => {
       const storeError = useUserStore.getState().error;
-      console.log(error)
 
       toast.error("Authorization failed", {
         description: storeError || "Invalid credentials",
@@ -74,10 +67,10 @@ export default function AuthPage() {
           <div className="w-full max-w-md space-y-8">
             <div className="space-y-3">
               <div className="space-y-2">
-                <h2 className="text-3xl font-semibold tracking-tight text-foreground">
+                <h2 className="text-center text-3xl font-semibold tracking-tight text-foreground">
                   Sign In
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-center text-base text-muted-foreground">
                   Enter your credentials to access your dashboard.
                 </p>
               </div>
@@ -164,11 +157,9 @@ export default function AuthPage() {
               <Button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="mt-6 h-12 w-full rounded-md bg-primary font-semibold shadow-[0_0_24px_rgba(6,182,212,0.18)] transition-all hover:scale-[1.01] hover:opacity-95 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+                className="mt-6 h-12 w-full rounded-md bg-primary text-lg font-semibold shadow-[0_0_24px_rgba(6,182,212,0.18)] transition-all hover:scale-[1.01] hover:opacity-95 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
               >
-                {loginMutation.isPending
-                  ? "Authorizing..."
-                  : "Authorize Access"}
+                {loginMutation.isPending ? "Signing you in..." : "Sign In"}
               </Button>
             </form>
           </div>
@@ -182,6 +173,19 @@ export default function AuthPage() {
           <div className="pointer-events-none absolute -right-40 top-1/2 h-155 w-155 -translate-y-1/2">
             <div className="h-full w-full bg-[radial-gradient(circle,rgba(6,182,212,0.18),transparent_70%)] blur-[110px]" />
           </div>
+
+          {/* Logo watermark */}
+          <div
+            className="pointer-events-none absolute -bottom-24 -right-24 h-140 w-140 bg-primary-foreground opacity-[0.06]"
+            style={{
+              maskImage: "url(/logo-mark.svg)",
+              maskRepeat: "no-repeat",
+              maskSize: "contain",
+              WebkitMaskImage: "url(/logo-mark.svg)",
+              WebkitMaskRepeat: "no-repeat",
+              WebkitMaskSize: "contain",
+            }}
+          />
 
           <div />
 

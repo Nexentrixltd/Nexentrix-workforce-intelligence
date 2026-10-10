@@ -4,6 +4,7 @@ import "./globals.css";
 import { inter, triakis } from "@/lib/fonts";
 import { Toaster } from "sonner";
 import Providers from "./providers";
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,15 +27,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${triakis.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${triakis.variable}`}>
       <head>
-        <link rel="icon" href="/nexentrix_favicon.png" />
+        <link rel="icon" href="/assets/logo-mark-white.svg" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster richColors position="top-right" closeButton />
-       {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Toaster richColors position="top-right" closeButton />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

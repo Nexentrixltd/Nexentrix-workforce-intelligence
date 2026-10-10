@@ -14,17 +14,18 @@ type RoleGuardProps = {
 
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   const router = useRouter();
-  const user = useUserStore((state) => state.user);
-  const isLoading = useUserStore((state) => state.isLoading);
-  const hasFetchedUser = useUserStore((state) => state.hasFetchedUser);
+  const role = useUserStore((s) => s.user?.role) as Role | undefined;
+  const isLoading = useUserStore((s) => s.isLoading);
+  const hasFetchedUser = useUserStore((s) => s.hasFetchedUser);
+
+  const allowed = !!role && allowedRoles.includes(role);
 
   useEffect(() => {
-    if (!hasFetchedUser || isLoading || !user) return;
+    if (!hasFetchedUser || isLoading || !role || allowed) return;
 
-    if (!allowedRoles.includes(user.role)) {
-      router.replace(roleRoutes[user.role as Role]);
-    }
-  }, [allowedRoles, hasFetchedUser, isLoading, user, router]);
+    const fallback = roleRoutes[role];
+    if (fallback) router.replace(fallback);
+  }, [hasFetchedUser, isLoading, role, allowed, router]);
 
   if (!hasFetchedUser || isLoading) {
     return (
@@ -34,8 +35,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
     );
   }
 
-  if (!user) return null;
-  if (!allowedRoles.includes(user.role)) return null;
+  if (!allowed) return null;
 
   return <>{children}</>;
 }
