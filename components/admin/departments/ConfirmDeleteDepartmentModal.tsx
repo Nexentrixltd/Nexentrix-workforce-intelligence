@@ -21,7 +21,7 @@ const ConfirmDeleteDepartmentModal = ({ department, onClose }: Props) => {
     const mutation = useMutation({
         mutationFn: async (id: string) => {
             const res = await fetch(
-                `/api/admin/departments?id=${encodeURIComponent(id)}`,
+                `/api/departments?id=${encodeURIComponent(id)}`,
                 { method: "DELETE" }
             );
             const data = await res.json().catch(() => ({}));

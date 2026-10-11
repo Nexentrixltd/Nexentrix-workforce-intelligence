@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireApiRole } from "@/lib/auth/session";
+import { requireApiPermission } from "@/lib/auth/session";
+import { canManageUser } from "@/lib/permissions";
+import { Role } from "@/types/rbac";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -21,13 +23,13 @@ const schema = z
   .refine((v) => Object.keys(v).length > 0, { message: "Nothing to update" });
 
 export async function PATCH(req: Request, { params }: Ctx) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("EDIT_USER");
   if (!auth.ok) return auth.response;
 
+  const actorRole = auth.user.role as Role;
   const { id } = await params;
 
-  const body = await req.json().catch(() => null);
-  const parsed = schema.safeParse(body);
+  const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Invalid input" },
@@ -49,7 +51,20 @@ export async function PATCH(req: Request, { params }: Ctx) {
         where: { id },
         select: { role: true, deactivatedAt: true },
       });
-      if (!target) return { error: "Employee not found", status: 404 };
+      if (!target) return { error: "User not found", status: 404 };
+
+      if (!canManageUser(actorRole, target.role as Role)) {
+        return {
+          error: "You don't have permission to modify this account",
+          status: 403,
+        };
+      }
+
+      const roleChanging = !!data.role && data.role !== target.role;
+
+      if (roleChanging && actorRole !== "ADMIN") {
+        return { error: "Only administrators can change roles", status: 403 };
+      }
 
       if (data.departmentId) {
         const dept = await tx.department.findUnique({
@@ -58,8 +73,6 @@ export async function PATCH(req: Request, { params }: Ctx) {
         });
         if (!dept) return { error: "Department not found", status: 400 };
       }
-
-      const roleChanging = !!data.role && data.role !== target.role;
 
       if (roleChanging && target.role === "ADMIN" && !target.deactivatedAt) {
         const activeAdmins = await tx.user.count({

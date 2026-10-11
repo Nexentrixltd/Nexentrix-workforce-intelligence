@@ -1,12 +1,13 @@
 import { Users, UserCheck, UserX, Building2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/session";
-import { Error as ErrorState } from "@/components/shared/Error";
+import { EmployeesTable } from "@/components/admin/employees/EmployeesTable";
+import { AddEmployeeButton } from "@/components/admin/employees/AddEmployeeButton";
 import { StatGrid } from "@/components/shared/statGrid";
-import { EmployeesTable } from "@/components/hr/EmployeesTable";
+import { Error as ErrorState } from "@/components/shared/Error";
 
 export default async function HrEmployeesPage() {
-    await requireRole(["HR"]);
+    const hr = await requireRole(["HR"]);
 
     let data;
 
@@ -76,18 +77,32 @@ export default async function HrEmployeesPage() {
     return (
         <div className="w-full">
             <div className="mx-auto w-full max-w-7xl space-y-5 sm:space-y-7">
-                <div className="min-w-0">
-                    <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
-                        Employees
-                    </h1>
-                    <p className="mt-2 text-sm text-secondary">
-                        Browse everyone in the organization by role, department and status.
-                    </p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
+                            Employees
+                        </h1>
+                        <p className="mt-2 text-sm text-secondary">
+                            Manage staff and team lead accounts, departments and status.
+                        </p>
+                    </div>
+
+                    <div className="w-full shrink-0 sm:w-auto [&>button]:w-full sm:[&>button]:w-auto">
+                        <AddEmployeeButton
+                            departments={departments}
+                            allowedRoles={["STAFF", "TEAM_LEAD"]}
+                        />
+                    </div>
                 </div>
 
                 <StatGrid stats={stats} />
 
-                <EmployeesTable users={rows} departments={departments} />
+                <EmployeesTable
+                    users={rows}
+                    departments={departments}
+                    currentUserId={hr.id}
+                    viewerRole="HR"
+                />
             </div>
         </div>
     );

@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireApiRole } from "@/lib/auth/session";
+import { requireApiPermission } from "@/lib/auth/session";
+import { canManageUser } from "@/lib/permissions";
+import { Role } from "@/types/rbac";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 const schema = z.object({ active: z.boolean() });
 
 export async function POST(req: Request, { params }: Ctx) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("DEACTIVATE_USER");
   if (!auth.ok) return auth.response;
 
+  const actorRole = auth.user.role as Role;
   const { id } = await params;
 
   const parsed = schema.safeParse(await req.json().catch(() => null));
@@ -33,6 +36,13 @@ export async function POST(req: Request, { params }: Ctx) {
         select: { role: true, deactivatedAt: true },
       });
       if (!target) return { error: "User not found", status: 404 };
+
+      if (!canManageUser(actorRole, target.role as Role)) {
+        return {
+          error: "You don't have permission to modify this account",
+          status: 403,
+        };
+      }
 
       if (!active) {
         if (target.role === "ADMIN" && !target.deactivatedAt) {

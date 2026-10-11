@@ -123,6 +123,7 @@ export default async function AdminStaffPage() {
                     users={tableUsers}
                     departments={departments}
                     currentUserId={admin.id}
+                    viewerRole="ADMIN"
                 />
             </div>
         </div>

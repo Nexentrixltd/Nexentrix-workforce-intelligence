@@ -16,7 +16,7 @@ const ResetPasswordModal = ({ user, onClose }: Props) => {
 
     const mutation = useMutation({
         mutationFn: async (id: string) => {
-            const res = await fetch(`/api/admin/employees/${id}/password`, { method: "POST" });
+            const res = await fetch(`/api/employees/${id}/password`, { method: "POST" });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error ?? "Failed to reset password");
             return data.temporaryPassword as string;

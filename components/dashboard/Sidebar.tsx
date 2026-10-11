@@ -77,7 +77,7 @@ export default function DashboardSidebar() {
       <div className="border-b border-border/60 px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center">
-            <img src="/nexentrix.png" alt="logo" />
+            <img src="/assets/nexentrix.png" alt="logo" />
           </div>
 
           <div className="min-w-0">

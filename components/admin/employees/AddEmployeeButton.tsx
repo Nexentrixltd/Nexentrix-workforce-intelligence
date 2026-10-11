@@ -2,8 +2,14 @@
 
 import { useState } from "react";
 import AddEmployeeModal, { type DepartmentOption } from "./AddEmployeeModal";
+import { Role } from "@/types/rbac";
 
-export function AddEmployeeButton({ departments }: { departments: DepartmentOption[] }) {
+type Props = {
+    departments: DepartmentOption[];
+    allowedRoles?: Role[];
+};
+
+export function AddEmployeeButton({ departments, allowedRoles }: Props) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -21,6 +27,7 @@ export function AddEmployeeButton({ departments }: { departments: DepartmentOpti
                 open={open}
                 onClose={() => setOpen(false)}
                 departments={departments}
+                allowedRoles={allowedRoles}
             />
         </>
     );

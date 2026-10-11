@@ -1,13 +1,19 @@
 import { Building2, Users, UserX, TrendingUp } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { Error as ErrorState } from "@/components/shared/Error";
 import { requireRole } from "@/lib/auth/session";
+import { DepartmentsTable } from "@/components/admin/departments/DepartmentsTable";
+import { AddDepartmentButton } from "@/components/admin/departments/AddDepartmentButton";
+import { hasPermission, Role } from "@/types/rbac";
+import { Error as ErrorState } from "@/components/shared/Error";
 import { StatGrid } from "@/components/shared/statGrid";
-import { DepartmentsTable } from "@/components/hr/DepartmentsTable";
-
 
 export default async function HrDepartmentsPage() {
-    await requireRole(["HR"]);
+    const hr = await requireRole(["HR"]);
+    const role = hr.role as Role;
+
+    const canCreate = hasPermission(role, "CREATE_DEPARTMENT");
+    const canEdit = hasPermission(role, "EDIT_DEPARTMENT");
+    const canDelete = hasPermission(role, "DELETE_DEPARTMENT");
 
     let data;
 
@@ -31,7 +37,6 @@ export default async function HrDepartmentsPage() {
     }
 
     const [departments, unassigned] = data;
-
     const counts = departments.map((d) => d._count.users);
 
     const stats = [
@@ -72,18 +77,32 @@ export default async function HrDepartmentsPage() {
     return (
         <div className="w-full">
             <div className="mx-auto w-full max-w-7xl space-y-5 sm:space-y-7">
-                <div className="min-w-0">
-                    <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
-                        Departments
-                    </h1>
-                    <p className="mt-2 text-sm text-secondary">
-                        See how the organization is structured and who sits in each department.
-                    </p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
+                            Departments
+                        </h1>
+                        <p className="mt-2 text-sm text-secondary">
+                            Create departments and manage who sits in each one.
+                        </p>
+                    </div>
+
+                    {canCreate && (
+                        <div className="w-full shrink-0 sm:w-auto [&>button]:w-full sm:[&>button]:w-auto">
+                            <AddDepartmentButton viewerRole="HR" />
+                        </div>
+                    )}
                 </div>
 
                 <StatGrid stats={stats} />
 
-                <DepartmentsTable departments={rows} />
+                <DepartmentsTable
+                    departments={rows}
+                    viewerRole="HR"
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    basePath="/hr/departments"
+                />
             </div>
         </div>
     );

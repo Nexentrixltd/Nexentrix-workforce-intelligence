@@ -100,7 +100,7 @@ export default async function AdminDepartmentsPage() {
             </p>
           </div>
 
-         <AddDepartmentButton />
+          <AddDepartmentButton viewerRole="ADMIN" />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -134,7 +134,13 @@ export default async function AdminDepartmentsPage() {
           })}
         </div>
 
-        <DepartmentsTable departments={tableDepartments} />
+        <DepartmentsTable
+          departments={tableDepartments}
+          viewerRole="ADMIN"
+          canEdit
+          canDelete
+          basePath="/admin/departments"
+        />
       </div>
     </div>
   );

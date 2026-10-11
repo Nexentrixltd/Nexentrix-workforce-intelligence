@@ -3,11 +3,13 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { requireApiRole } from "@/lib/auth/session";
+import { requireApiRole, requireApiPermission } from "@/lib/auth/session";
+import { canAssignRole } from "@/lib/permissions";
 import { generateTempPassword } from "@/lib/auth/tempPasswordGenerator";
+import { Role } from "@/types/rbac";
 
 export async function GET(req: Request) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("VIEW_USERS");
   if (!auth.ok) return auth.response;
 
   const departmentId = new URL(req.url).searchParams.get("departmentId");
@@ -38,7 +40,7 @@ const createSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("CREATE_USER");
   if (!auth.ok) return auth.response;
 
   const parsed = createSchema.safeParse(await req.json().catch(() => null));
@@ -49,6 +51,13 @@ export async function POST(req: Request) {
     );
   }
   const { name, email, role, departmentId } = parsed.data;
+
+  if (!canAssignRole(auth.user.role as Role, role)) {
+    return NextResponse.json(
+      { error: "You can't create accounts with this role." },
+      { status: 403 },
+    );
+  }
 
   try {
     if (departmentId) {

@@ -19,8 +19,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Nexentrix",
   description: "Nexentrix workforce intelligence",
+  icons: {
+    icon: [
+      {
+        url: "/assets/logo-mark-white.svg",
+        type: "image/svg+xml",
+      },
+    ],
+  },
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,9 +35,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${triakis.variable}`}>
-      <head>
-        <link rel="icon" href="/assets/logo-mark-white.svg" />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

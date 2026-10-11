@@ -1,9 +1,10 @@
-// app/api/admin/departments/route.ts
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireApiRole } from "@/lib/auth/session";
+import { requireApiPermission } from "@/lib/auth/session";
+import { canManageUser } from "@/lib/permissions";
+import { Role } from "@/types/rbac";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(60),
@@ -18,11 +19,12 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("CREATE_DEPARTMENT");
   if (!auth.ok) return auth.response;
 
-  const body = await req.json().catch(() => null);
-  const parsed = schema.safeParse(body);
+  const actorRole = auth.user.role as Role;
+
+  const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Invalid input" },
@@ -35,15 +37,27 @@ export async function POST(req: Request) {
 
   try {
     if (userIds.length > 0) {
-      const available = await prisma.user.count({
-        where: { id: { in: userIds }, departmentId: "" },
+      const members = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, role: true, departmentId: true },
       });
-      if (available !== userIds.length) {
+
+      if (members.length !== userIds.length) {
         return NextResponse.json(
-          {
-            error: "Some selected users are missing or already in a department",
-          },
+          { error: "Some selected users no longer exist" },
           { status: 400 },
+        );
+      }
+      if (members.some((m) => m.departmentId !== null)) {
+        return NextResponse.json(
+          { error: "Some selected users are already in a department" },
+          { status: 400 },
+        );
+      }
+      if (members.some((m) => !canManageUser(actorRole, m.role as Role))) {
+        return NextResponse.json(
+          { error: "You can't assign those accounts to a department" },
+          { status: 403 },
         );
       }
     }
@@ -76,7 +90,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("DELETE_DEPARTMENT");
   if (!auth.ok) return auth.response;
 
   const id = new URL(req.url).searchParams.get("id");

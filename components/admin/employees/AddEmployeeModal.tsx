@@ -7,6 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Role } from "@/types/rbac";
 
 export type DepartmentOption = { id: string; name: string };
 
@@ -21,16 +22,31 @@ type FormValues = z.infer<typeof schema>;
 
 type Created = { name: string; email: string; temporaryPassword: string };
 
+const ALL_ROLES: Role[] = ["STAFF", "TEAM_LEAD", "HR", "ADMIN"];
+
+const ROLE_OPTIONS: { value: Role; label: string }[] = [
+    { value: "STAFF", label: "Staff" },
+    { value: "TEAM_LEAD", label: "Team Lead" },
+    { value: "HR", label: "HR" },
+    { value: "ADMIN", label: "Admin" },
+];
+
 type Props = {
     open: boolean;
     onClose: () => void;
     departments: DepartmentOption[];
+    allowedRoles?: Role[];
 };
 
 const inputCls =
     "mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary";
 
-const AddEmployeeModal = ({ open, onClose, departments }: Props) => {
+const AddEmployeeModal = ({
+    open,
+    onClose,
+    departments,
+    allowedRoles = ALL_ROLES,
+}: Props) => {
     const router = useRouter();
     const [created, setCreated] = useState<Created | null>(null);
 
@@ -46,7 +62,7 @@ const AddEmployeeModal = ({ open, onClose, departments }: Props) => {
 
     const mutation = useMutation({
         mutationFn: async (values: FormValues) => {
-            const res = await fetch("/api/admin/employees", {
+            const res = await fetch("/api/employees", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -89,6 +105,7 @@ const AddEmployeeModal = ({ open, onClose, departments }: Props) => {
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, mutation.isPending]);
 
     if (!open) return null;
@@ -219,11 +236,18 @@ const AddEmployeeModal = ({ open, onClose, departments }: Props) => {
                                     <label htmlFor="new-role" className="block text-sm font-medium">
                                         Role
                                     </label>
-                                    <select id="new-role" {...register("role")} className={inputCls}>
-                                        <option value="STAFF">Staff</option>
-                                        <option value="TEAM_LEAD">Team Lead</option>
-                                        <option value="HR">HR</option>
-                                        <option value="ADMIN">Admin</option>
+                                    <select
+                                        id="new-role"
+                                        {...register("role")}
+                                        className={inputCls}
+                                    >
+                                        {ROLE_OPTIONS.filter((o) =>
+                                            allowedRoles.includes(o.value)
+                                        ).map((o) => (
+                                            <option key={o.value} value={o.value}>
+                                                {o.label}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 

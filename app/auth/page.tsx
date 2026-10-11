@@ -157,7 +157,7 @@ export default function AuthPage() {
               <Button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="mt-6 h-12 w-full rounded-md bg-primary text-lg font-semibold shadow-[0_0_24px_rgba(6,182,212,0.18)] transition-all hover:scale-[1.01] hover:opacity-95 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+                className="mt-6 h-12 w-full rounded-md bg-primary text-base font-semibold shadow-[0_0_24px_rgba(6,182,212,0.18)] transition-all hover:scale-[1.01] hover:opacity-95 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
               >
                 {loginMutation.isPending ? "Signing you in..." : "Sign In"}
               </Button>

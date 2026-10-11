@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { randomInt } from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { requireApiRole } from "@/lib/auth/session";
+import { requireApiPermission } from "@/lib/auth/session";
+import { canManageUser } from "@/lib/permissions";
+import { Role } from "@/types/rbac";
 import { generateTempPassword } from "@/lib/auth/tempPasswordGenerator";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function POST(_req: Request, { params }: Ctx) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("RESET_USER_PASSWORD");
   if (!auth.ok) return auth.response;
 
   const { id } = await params;
@@ -23,10 +24,17 @@ export async function POST(_req: Request, { params }: Ctx) {
   try {
     const target = await prisma.user.findUnique({
       where: { id },
-      select: { id: true },
+      select: { role: true },
     });
     if (!target) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (!canManageUser(auth.user.role as Role, target.role as Role)) {
+      return NextResponse.json(
+        { error: "You don't have permission to modify this account" },
+        { status: 403 },
+      );
     }
 
     const temporaryPassword = generateTempPassword();

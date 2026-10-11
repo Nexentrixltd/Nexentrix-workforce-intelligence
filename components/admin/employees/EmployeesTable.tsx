@@ -1,25 +1,37 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Filter, Pencil, KeyRound, LogOut, UserX, UserCheck } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Pencil,
+  KeyRound,
+  LogOut,
+  UserX,
+  UserCheck,
+  Lock,
+} from "lucide-react";
 import EditEmployeeModal, {
   type DepartmentOption,
   type EmployeeToEdit,
 } from "./EditEmployeeModal";
 import ConfirmActionModal, { type ConfirmAction } from "./ConfirmActionModal";
 import ResetPasswordModal, { type ResetTarget } from "./ResetPasswordModal";
+import { canManageUser } from "@/lib/permissions";
+import { Role } from "@/types/rbac";
+import { useUserStore } from "@/store/userStore";
 
 export type StaffRow = {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "HR" | "TEAM_LEAD" | "STAFF";
+  role: Role;
   department: { id: string; name: string } | null;
   createdAt: string;
   deactivatedAt: string | null;
 };
 
-const ROLE_STYLES: Record<StaffRow["role"], { label: string; cls: string }> = {
+const ROLE_STYLES: Record<Role, { label: string; cls: string }> = {
   ADMIN: { label: "Admin", cls: "bg-rose-50 text-rose-700" },
   HR: { label: "HR", cls: "bg-violet-50 text-violet-700" },
   TEAM_LEAD: { label: "Team Lead", cls: "bg-emerald-50 text-emerald-700" },
@@ -56,7 +68,7 @@ function formatDate(value: string) {
   });
 }
 
-function RoleBadge({ role }: { role: StaffRow["role"] }) {
+function RoleBadge({ role }: { role: Role }) {
   const { label, cls } = ROLE_STYLES[role];
   return (
     <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${cls}`}>{label}</span>
@@ -83,20 +95,26 @@ function DepartmentBadge({ department }: { department: StaffRow["department"] })
 const iconBtn =
   "cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400";
 
+const selectCls =
+  "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 lg:w-40";
+
 type Props = {
   users: StaffRow[];
   departments: DepartmentOption[];
   currentUserId: string;
+  viewerRole: Role;
 };
 
-export function EmployeesTable({ users, departments, currentUserId }: Props) {
+export function EmployeesTable({ users, departments, currentUserId, viewerRole }: Props) {
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState<"ALL" | StaffRow["role"]>("ALL");
+  const [role, setRole] = useState<"ALL" | Role>("ALL");
+  const [dept, setDept] = useState<string>("ALL");
   const [status, setStatus] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
 
   const [toEdit, setToEdit] = useState<EmployeeToEdit | null>(null);
   const [toReset, setToReset] = useState<ResetTarget | null>(null);
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null);
+  const user = useUserStore((s)=> s.user)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -104,6 +122,8 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
       if (role !== "ALL" && u.role !== role) return false;
       if (status === "ACTIVE" && u.deactivatedAt) return false;
       if (status === "INACTIVE" && !u.deactivatedAt) return false;
+      if (dept === "NONE" && u.department) return false;
+      if (dept !== "ALL" && dept !== "NONE" && u.department?.id !== dept) return false;
       if (!q) return true;
       return (
         u.name.toLowerCase().includes(q) ||
@@ -111,7 +131,7 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
         (u.department?.name.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [users, search, role, status]);
+  }, [users, search, role, dept, status]);
 
   const openEdit = (u: StaffRow) =>
     setToEdit({
@@ -128,7 +148,7 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
       message: `${u.name} will be signed out on all devices and will need to log in again.`,
       confirmLabel: "Sign out",
       danger: true,
-      url: `/api/admin/users/${u.id}/sessions`,
+      url: `/api/employees/${u.id}/sessions`,
       method: "DELETE",
       successMessage: "User signed out",
     });
@@ -142,7 +162,7 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
           message: `${u.name} will be signed out everywhere and won't be able to log in until reactivated. Their data is kept.`,
           confirmLabel: "Deactivate",
           danger: true,
-          url: `/api/admin/users/${u.id}/status`,
+          url: `/api/employees/${u.id}/status`,
           method: "POST",
           body: { active: false },
           successMessage: "Account deactivated",
@@ -151,7 +171,7 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
           title: "Reactivate account",
           message: `${u.name} will be able to log in again.`,
           confirmLabel: "Reactivate",
-          url: `/api/admin/users/${u.id}/status`,
+          url: `/api/employees/${u.id}/status`,
           method: "POST",
           body: { active: true },
           successMessage: "Account reactivated",
@@ -160,8 +180,22 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
   };
 
   const renderActions = (u: StaffRow) => {
+    if (!canManageUser(viewerRole, u.role)) {
+      return (
+        <div className="flex justify-end">
+          <span
+            title="Only administrators can manage this account"
+            className="p-2 text-slate-300"
+          >
+            <Lock size={18} aria-label="Managed by administrators only" />
+          </span>
+        </div>
+      );
+    }
+
     const isSelf = u.id === currentUserId;
     const inactive = !!u.deactivatedAt;
+
     return (
       <div className="flex items-center justify-end gap-0.5">
         <button
@@ -217,23 +251,18 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
   const emptyState = (
     <div className="px-6 py-16 text-center">
       <Filter size={30} className="mx-auto mb-3 text-slate-300" />
-      <p className="font-semibold text-slate-700">No staff found</p>
-      <p className="mt-1 text-sm text-slate-500">
-        Try a different search or filter.
-      </p>
+      <p className="font-semibold text-slate-700">No employees found</p>
+      <p className="mt-1 text-sm text-slate-500">Try a different search or filter.</p>
     </div>
   );
-
-  const selectCls =
-    "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 sm:w-40";
 
   return (
     <section className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:p-5">
         <div className="min-w-0">
-          <h2 className="text-lg font-bold">All Staff</h2>
+          <h2 className="text-lg font-bold">All Employees</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Browse everyone, filter by role or status, and manage accounts.
+            Browse everyone, filter by role, department or status, and manage accounts.
           </p>
         </div>
         <span className="w-fit shrink-0 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700">
@@ -241,8 +270,8 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
         </span>
       </div>
 
-      <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row">
-        <div className="relative w-full sm:max-w-md">
+      <div className="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row">
+        <div className="relative w-full lg:max-w-sm">
           <Search
             size={18}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -251,7 +280,7 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email or department..."
-            aria-label="Search staff"
+            aria-label="Search employees"
             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
           />
         </div>
@@ -270,6 +299,21 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
         </select>
 
         <select
+          value={dept}
+          onChange={(e) => setDept(e.target.value)}
+          aria-label="Filter by department"
+          className={selectCls}
+        >
+          <option value="ALL">All departments</option>
+          <option value="NONE">No department</option>
+          {departments.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+
+        <select
           value={status}
           onChange={(e) => setStatus(e.target.value as typeof status)}
           aria-label="Filter by status"
@@ -281,7 +325,6 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
         </select>
       </div>
 
-      {/* Mobile: cards */}
       <div className="md:hidden">
         {filtered.length === 0 ? (
           emptyState
@@ -298,7 +341,7 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-semibold text-slate-800">
-                        {u.name}
+                        {u.id === user?.id ? "You" : u.name}
                       </p>
                       <RoleBadge role={u.role} />
                     </div>
@@ -354,7 +397,7 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="truncate text-sm font-semibold text-slate-800">
-                          {u.name}
+                          {u.id === user?.id ? "You" : u.name}
                         </p>
                         {u.deactivatedAt && <InactiveBadge />}
                       </div>
@@ -391,6 +434,7 @@ export function EmployeesTable({ users, departments, currentUserId }: Props) {
         user={toEdit}
         departments={departments}
         currentUserId={currentUserId}
+        canChangeRole={viewerRole === "ADMIN"}
         onClose={() => setToEdit(null)}
       />
       <ResetPasswordModal user={toReset} onClose={() => setToReset(null)} />

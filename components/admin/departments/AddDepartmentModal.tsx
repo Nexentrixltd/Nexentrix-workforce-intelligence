@@ -1,20 +1,14 @@
-// components/admin/departments/AddDepartmentModal.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-type AssignableUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-};
+import { MemberPicker, type UserOption } from "./MemberPicker";
+import { Role } from "@/types/rbac";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(60),
@@ -31,15 +25,15 @@ type FormValues = z.infer<typeof schema>;
 type Props = {
   open: boolean;
   onClose: () => void;
+  viewerRole: Role;
 };
 
-const USERS_KEY = ["unassigned-users"];
+const USERS_KEY = ["users-available"];
 
-const AddDepartmentModal = ({ open, onClose }: Props) => {
+const AddDepartmentModal = ({ open, onClose, viewerRole }: Props) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [search, setSearch] = useState("");
 
   const {
     register,
@@ -52,24 +46,13 @@ const AddDepartmentModal = ({ open, onClose }: Props) => {
     queryKey: USERS_KEY,
     enabled: open,
     staleTime: 0,
-    queryFn: async (): Promise<AssignableUser[]> => {
-      const res = await fetch("/api/admin/departments/unassigned-users");
+    queryFn: async (): Promise<UserOption[]> => {
+      const res = await fetch("/api/employees");
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Failed to load users");
-      return data.users;
+      return data.users as UserOption[];
     },
   });
-
-  const users = usersQuery.data ?? [];
-
-  const filteredUsers = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter(
-      (u) =>
-        u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-    );
-  }, [users, search]);
 
   const toggleUser = (id: string) => {
     setSelected((prev) => {
@@ -83,13 +66,12 @@ const AddDepartmentModal = ({ open, onClose }: Props) => {
   const handleClose = () => {
     reset();
     setSelected(new Set());
-    setSearch("");
     onClose();
   };
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const res = await fetch("/api/admin/departments", {
+      const res = await fetch("/api/departments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -154,9 +136,7 @@ const AddDepartmentModal = ({ open, onClose }: Props) => {
                 autoFocus
               />
               {errors.name && (
-                <p className="mt-1 text-xs text-red-600">
-                  {errors.name.message}
-                </p>
+                <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>
               )}
             </div>
 
@@ -171,85 +151,28 @@ const AddDepartmentModal = ({ open, onClose }: Props) => {
                 placeholder="ENG"
               />
               {errors.code && (
-                <p className="mt-1 text-xs text-red-600">
-                  {errors.code.message}
-                </p>
+                <p className="mt-1 text-xs text-red-600">{errors.code.message}</p>
               )}
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="flex items-center justify-between">
-              <label htmlFor="user-search" className="text-sm font-medium">
-                Members <span className="text-gray-400">(optional)</span>
-              </label>
-              <span className="text-xs text-gray-500">
-                {selected.size} selected
-              </span>
-            </div>
-
-            <input
-              id="user-search"
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or email"
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary"
-            />
-
-            <ul className="mt-2 min-h-0 max-h-56 flex-1 divide-y divide-gray-100 overflow-y-auto rounded-md border border-gray-200">
-              {usersQuery.isLoading ? (
-                <li className="px-3 py-6 text-center text-sm text-gray-500">
-                  Loading users...
-                </li>
-              ) : usersQuery.isError ? (
-                <li className="px-3 py-6 text-center text-sm text-red-600">
-                  {usersQuery.error.message}{" "}
-                  <button
-                    type="button"
-                    onClick={() => usersQuery.refetch()}
-                    className="underline"
-                  >
-                    Retry
-                  </button>
-                </li>
-              ) : filteredUsers.length === 0 ? (
-                <li className="px-3 py-6 text-center text-sm text-gray-500">
-                  {users.length === 0
-                    ? "No unassigned users available"
-                    : "No users match your search"}
-                </li>
-              ) : (
-                filteredUsers.map((u) => (
-                  <li key={u.id}>
-                    <label className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-gray-50">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(u.id)}
-                        onChange={() => toggleUser(u.id)}
-                        className="h-4 w-4"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{u.name}</p>
-                        <p className="truncate text-xs text-gray-500">
-                          {u.email}
-                        </p>
-                      </div>
-                      <span className="rounded bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">
-                        {u.role}
-                      </span>
-                    </label>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
+          <MemberPicker
+            users={usersQuery.data ?? []}
+            selected={selected}
+            onToggle={toggleUser}
+            viewerRole={viewerRole}
+            isLoading={usersQuery.isLoading}
+            errorMessage={usersQuery.isError ? usersQuery.error.message : undefined}
+            onRetry={() => usersQuery.refetch()}
+            emptyMessage="No unassigned users available"
+          />
 
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm"
+              disabled={mutation.isPending}
+              className="rounded-md border border-gray-300 px-4 py-2 text-sm disabled:opacity-60"
             >
               Cancel
             </button>

@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireApiRole } from "@/lib/auth/session";
+import { requireApiPermission } from "@/lib/auth/session";
+import { canManageUser } from "@/lib/permissions";
+import { Role } from "@/types/rbac";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -19,7 +21,7 @@ const schema = z.object({
 });
 
 export async function GET(_req: Request, { params }: Ctx) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("VIEW_DEPARTMENTS");
   if (!auth.ok) return auth.response;
 
   const { id } = await params;
@@ -60,13 +62,13 @@ export async function GET(_req: Request, { params }: Ctx) {
 }
 
 export async function PATCH(req: Request, { params }: Ctx) {
-  const auth = await requireApiRole(["ADMIN"]);
+  const auth = await requireApiPermission("EDIT_DEPARTMENT");
   if (!auth.ok) return auth.response;
 
+  const actorRole = auth.user.role as Role;
   const { id } = await params;
 
-  const body = await req.json().catch(() => null);
-  const parsed = schema.safeParse(body);
+  const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Invalid input" },
@@ -75,31 +77,75 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
 
   const { name, code } = parsed.data;
-  const userIds = [...new Set(parsed.data.userIds)];
+  const requested = [...new Set(parsed.data.userIds)];
 
   try {
-    if (userIds.length > 0) {
-      const existing = await prisma.user.count({
-        where: { id: { in: userIds } },
+    const result = await prisma.$transaction(async (tx) => {
+      const department = await tx.department.findUnique({
+        where: { id },
+        select: { users: { select: { id: true, role: true } } },
       });
-      if (existing !== userIds.length) {
-        return NextResponse.json(
-          { error: "Some selected users no longer exist" },
-          { status: 400 },
-        );
-      }
-    }
+      if (!department) return { error: "Department not found", status: 404 };
 
-    const department = await prisma.department.update({
-      where: { id },
-      data: {
-        name,
-        code,
-        users: { set: userIds.map((uid) => ({ id: uid })) },
-      },
+      const currentIds = new Set(department.users.map((u) => u.id));
+      let finalIds = requested;
+
+      // Only people this actor may manage can be added; accounts they may not
+      // manage (e.g. ADMIN/HR for HR) stay exactly as they are.
+      const lockedIds = department.users
+        .filter((u) => !canManageUser(actorRole, u.role as Role))
+        .map((u) => u.id);
+
+      const newIds = requested.filter((uid) => !currentIds.has(uid));
+      if (newIds.length > 0) {
+        const newUsers = await tx.user.findMany({
+          where: { id: { in: newIds } },
+          select: { role: true },
+        });
+        if (newUsers.some((u) => !canManageUser(actorRole, u.role as Role))) {
+          return {
+            error: "You can't assign those accounts to a department",
+            status: 403,
+          };
+        }
+      }
+
+      finalIds = [...new Set([...requested, ...lockedIds])];
+
+      if (finalIds.length > 0) {
+        const available = await tx.user.count({
+          where: {
+            id: { in: finalIds },
+            OR: [{ departmentId: null }, { departmentId: id }],
+          },
+        });
+        if (available !== finalIds.length) {
+          return {
+            error: "Some selected users are missing or in another department",
+            status: 400,
+          };
+        }
+      }
+
+      await tx.department.update({
+        where: { id },
+        data: {
+          name,
+          code,
+          users: { set: finalIds.map((uid) => ({ id: uid })) },
+        },
+      });
+
+      return { ok: true };
     });
 
-    return NextResponse.json(department);
+    if ("error" in result) {
+      return NextResponse.json(
+        { error: result.error },
+        { status: result.status },
+      );
+    }
+    return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2025") {

@@ -31,15 +31,17 @@ type Props = {
     user: EmployeeToEdit | null;
     departments: DepartmentOption[];
     currentUserId: string;
+    canChangeRole: boolean;
     onClose: () => void;
 };
 
 const inputCls =
     "mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary disabled:bg-gray-50 disabled:text-gray-500";
 
-const EditEmployeeModal = ({ user, departments, currentUserId, onClose }: Props) => {
+const EditEmployeeModal = ({ user, departments, currentUserId, canChangeRole, onClose }: Props) => {
     const router = useRouter();
     const isSelf = user?.id === currentUserId;
+    const roleLocked = isSelf || !canChangeRole;
 
     const {
         register,
@@ -61,13 +63,13 @@ const EditEmployeeModal = ({ user, departments, currentUserId, onClose }: Props)
 
     const mutation = useMutation({
         mutationFn: async (values: FormValues) => {
-            const res = await fetch(`/api/admin/employees/${user!.id}`, {
+            const res = await fetch(`/api/employees/${user!.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: values.name,
                     email: values.email,
-                    role: isSelf ? undefined : values.role,
+                    role: roleLocked ? undefined : values.role,
                     departmentId: values.departmentId || null,
                 }),
             });
@@ -150,7 +152,7 @@ const EditEmployeeModal = ({ user, departments, currentUserId, onClose }: Props)
                         <select
                             id="emp-role"
                             {...register("role")}
-                            disabled={isSelf}
+                            disabled={roleLocked}
                             className={inputCls}
                         >
                             <option value="STAFF">Staff</option>
@@ -158,9 +160,11 @@ const EditEmployeeModal = ({ user, departments, currentUserId, onClose }: Props)
                             <option value="HR">HR</option>
                             <option value="ADMIN">Admin</option>
                         </select>
-                        {isSelf ? (
+                        {roleLocked ? (
                             <p className="mt-1 text-xs text-gray-500">
-                                You can&apos;t change your own role.
+                                {isSelf
+                                    ? "You can't change your own role."
+                                    : "Only administrators can change roles."}
                             </p>
                         ) : (
                             <p className="mt-1 text-xs text-gray-500">
