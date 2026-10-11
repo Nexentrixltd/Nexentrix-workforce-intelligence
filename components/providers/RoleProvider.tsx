@@ -3,9 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/userStore";
-import { Spinner } from "@/components/ui/spinner";
-import { Role } from "@/types/rbac";
-import { roleRoutes } from "@/lib/utils";
+import { Spinner } from "@/components/shared/spinner";
+import { Role, roleRoutes } from "@/types/rbac";
 
 type RoleGuardProps = {
   allowedRoles: Role[];

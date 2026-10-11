@@ -4,10 +4,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth/jwt";
 import { prisma } from "@/lib/prisma";
-import { hasPermission, roleRoutes } from "@/lib/utils";
-import type { Permission, Role } from "@/types/rbac";
+import { hasPermission, roleRoutes, type Permission, type Role } from "@/types/rbac";
 import { NextResponse } from "next/server";
-import { truncate } from "fs";
 
 const TOUCH_INTERVAL_MS = 5 * 60 * 1000;
 

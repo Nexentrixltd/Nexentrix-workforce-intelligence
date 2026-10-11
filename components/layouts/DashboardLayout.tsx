@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/userStore";
-import { Spinner } from "@/components/ui/spinner";
-import Header from "@/components/ui/Header";
+import { Spinner } from "@/components/shared/spinner";
+import Header from "@/components/shared/Header";
 import DashboardSidebar from "@/components/dashboard/Sidebar";
 
 export default function DashboardClientLayout({

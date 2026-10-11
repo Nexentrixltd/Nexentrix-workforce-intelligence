@@ -1,0 +1,90 @@
+import { Building2, Users, UserX, TrendingUp } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { Error as ErrorState } from "@/components/shared/Error";
+import { requireRole } from "@/lib/auth/session";
+import { StatGrid } from "@/components/shared/statGrid";
+import { DepartmentsTable } from "@/components/hr/DepartmentsTable";
+
+
+export default async function HrDepartmentsPage() {
+    await requireRole(["HR"]);
+
+    let data;
+
+    try {
+        data = await Promise.all([
+            prisma.department.findMany({
+                orderBy: { name: "asc" },
+                select: {
+                    id: true,
+                    name: true,
+                    code: true,
+                    createdAt: true,
+                    _count: { select: { users: true } },
+                },
+            }),
+            prisma.user.count({ where: { departmentId: null } }),
+        ]);
+    } catch (error) {
+        console.error("[HR Departments] Failed to load:", error);
+        return <ErrorState heading="Unable to load Departments" />;
+    }
+
+    const [departments, unassigned] = data;
+
+    const counts = departments.map((d) => d._count.users);
+
+    const stats = [
+        {
+            title: "Total Departments",
+            value: departments.length,
+            icon: Building2,
+            iconClass: "bg-indigo-50 text-indigo-600",
+        },
+        {
+            title: "Assigned Employees",
+            value: counts.reduce((sum, n) => sum + n, 0),
+            icon: Users,
+            iconClass: "bg-blue-50 text-blue-600",
+        },
+        {
+            title: "Unassigned Employees",
+            value: unassigned,
+            icon: UserX,
+            iconClass: "bg-amber-50 text-amber-600",
+        },
+        {
+            title: "Largest Team",
+            value: Math.max(0, ...counts),
+            icon: TrendingUp,
+            iconClass: "bg-emerald-50 text-emerald-600",
+        },
+    ];
+
+    const rows = departments.map((d) => ({
+        id: d.id,
+        name: d.name,
+        code: d.code,
+        members: d._count.users,
+        createdAt: d.createdAt.toISOString(),
+    }));
+
+    return (
+        <div className="w-full">
+            <div className="mx-auto w-full max-w-7xl space-y-5 sm:space-y-7">
+                <div className="min-w-0">
+                    <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
+                        Departments
+                    </h1>
+                    <p className="mt-2 text-sm text-secondary">
+                        See how the organization is structured and who sits in each department.
+                    </p>
+                </div>
+
+                <StatGrid stats={stats} />
+
+                <DepartmentsTable departments={rows} />
+            </div>
+        </div>
+    );
+}

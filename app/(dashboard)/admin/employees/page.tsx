@@ -1,6 +1,6 @@
 import { Users, ShieldCheck, UserCog, UserX } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { Error as ErrorState } from "@/components/ui/Error";
+import { Error as ErrorState } from "@/components/shared/Error";
 import { requireRole } from "@/lib/auth/session";
 import { EmployeesTable } from "@/components/admin/employees/EmployeesTable";
 import { AddEmployeeButton } from "@/components/admin/employees/AddEmployeeButton";

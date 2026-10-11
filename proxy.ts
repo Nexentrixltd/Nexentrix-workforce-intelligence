@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifySession } from "@/lib/auth/jwt";
-import { roleRoutes } from "@/lib/utils";
+import { roleRoutes } from "./types/rbac";
 
 const access: Record<string, string[]> = {
   "/admin": ["ADMIN"],

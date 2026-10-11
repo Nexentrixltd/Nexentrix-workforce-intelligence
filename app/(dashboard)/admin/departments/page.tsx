@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { DepartmentsTable } from "@/components/admin/departments/DepartmentsTable";
-import { Error } from "@/components/ui/Error";
+import { Error } from "@/components/shared/Error";
 import { AddDepartmentButton } from "@/components/admin/departments/AddDepartmentButton";
 
 export default async function AdminDepartmentsPage() {

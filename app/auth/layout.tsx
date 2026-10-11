@@ -2,9 +2,8 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { QueryProvider } from "@/components/providers/QueryProvider";
 import { useUserStore } from "@/store/userStore";
-import { roleRoutes } from "@/lib/utils";
+import { roleRoutes } from "@/types/rbac";
 
 export default function LoginLayout({ children }: { children: ReactNode }) {
   const role = useUserStore((s) => s.user?.role);

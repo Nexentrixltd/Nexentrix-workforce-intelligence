@@ -7,10 +7,10 @@ import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/shared/button";
+import { Checkbox } from "@/components/shared/checkbox";
+import { Input } from "@/components/shared/input";
+import { Label } from "@/components/shared/label";
 import { signInSchema, type SignInInput } from "@/lib/validations/auth";
 import { useUserStore } from "@/store/userStore";
 

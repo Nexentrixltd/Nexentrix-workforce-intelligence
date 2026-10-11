@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
-import { roleRoutes } from "@/lib/utils";
 import { ChangePasswordForm } from "@/components/change-password/ChangePassword";
+import { roleRoutes } from "@/types/rbac";
 
 export default async function ChangePasswordPage() {
     const user = await getSessionUser();

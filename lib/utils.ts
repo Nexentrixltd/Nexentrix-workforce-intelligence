@@ -1,4 +1,4 @@
-import { Permission } from "@/types/rbac";
+import { Permission, Role } from "@/types/rbac";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Icon } from "@tabler/icons-react";
@@ -73,63 +73,6 @@ export const departments = [
     code: "CRM",
   },
 ];
-
-export const roleRoutes: Record<Role, string> = {
-  ADMIN: "/admin/dashboard",
-  HR: "/hr/dashboard",
-  TEAM_LEAD: "/team-lead/dashboard",
-  STAFF: "/staff/dashboard",
-};
-
-export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  ADMIN: [
-    "VIEW_ADMIN_DASHBOARD",
-    "VIEW_USERS",
-    "CREATE_USER",
-    "EDIT_USER",
-    "DEACTIVATE_USER",
-    "RESET_USER_PASSWORD",
-    "REVOKE_USER_SESSIONS",
-    "VIEW_DEPARTMENTS",
-    "MANAGE_DEPARTMENTS",
-    "VIEW_ALL_REPORTS",
-    "EXPORT_REPORTS",
-    "VIEW_ANALYTICS",
-    "MANAGE_SETTINGS",
-  ],
-  HR: [
-    "VIEW_HR_DASHBOARD",
-    "VIEW_USERS",
-    "VIEW_DEPARTMENTS",
-    "VIEW_ALL_REPORTS",
-    "EXPORT_REPORTS",
-    "VIEW_ANALYTICS",
-  ],
-  STAFF: [
-    "VIEW_STAFF_DASHBOARD",
-    "VIEW_OWN_REPORTS",
-    "SUBMIT_REPORT",
-    "EDIT_OWN_REPORT",
-  ],
-  TEAM_LEAD: [
-    "VIEW_TEAM_LEAD_DASHBOARD",
-    "VIEW_TEAM_REPORTS",
-    "APPROVE_REPORT",
-    "VIEW_ANALYTICS",
-  ],
-};
-
-export function hasPermission(role: Role, permission: Permission) {
-  return ROLE_PERMISSIONS[role].includes(permission);
-}
-
-type NavItem = {
-  label: string;
-  href: string;
-  roles: Role[];
-  icon: React.ElementType;
-};
-export type Role = "ADMIN" | "HR" | "STAFF" | "TEAM_LEAD";
 
 export type DashboardNavItem = {
   label: string;

@@ -76,7 +76,6 @@ export function ChangePasswordForm({ destination }: { destination: string }) {
             if (!res.ok) throw new Error(data.error ?? "Failed to change password");
 
             toast.success("Password updated");
-            // Full reload so cached user state (isFirstLogin) is refetched
             window.location.assign(destination);
         } catch (err) {
             toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -96,7 +95,7 @@ export function ChangePasswordForm({ destination }: { destination: string }) {
             <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
                 <PasswordField
                     id="currentPassword"
-                    label="Temporary password"
+                    label="Current password"
                     autoComplete="current-password"
                     error={errors.currentPassword?.message}
                     registration={register("currentPassword")}
