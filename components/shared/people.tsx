@@ -1,3 +1,4 @@
+import { ROLE_STYLES } from "@/lib/utils";
 import { Role } from "@/types/rbac";
 
 
@@ -30,13 +31,6 @@ export function formatDate(value: string) {
         year: "numeric",
     });
 }
-
-const ROLE_STYLES: Record<Role, { label: string; cls: string }> = {
-    ADMIN: { label: "Admin", cls: "bg-rose-50 text-rose-700" },
-    HR: { label: "HR", cls: "bg-violet-50 text-violet-700" },
-    TEAM_LEAD: { label: "Team Lead", cls: "bg-emerald-50 text-emerald-700" },
-    STAFF: { label: "Staff", cls: "bg-slate-100 text-slate-700" },
-};
 
 export function RoleBadge({ role }: { role: Role }) {
     const { label, cls } = ROLE_STYLES[role];

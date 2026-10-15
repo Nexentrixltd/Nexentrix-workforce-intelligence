@@ -7,34 +7,50 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Role } from "@/types/rbac";
+import { ROLES, type Role } from "@/types/rbac";
 
-export type DepartmentOption = { id: string; name: string };
+export type DepartmentOption = { id: string; name: string; hasLead?: boolean };
+export type ArmOption = { id: string; name: string; isShared?: boolean; hasHead?: boolean };
 
-const schema = z.object({
-    name: z.string().trim().min(2, "Name must be at least 2 characters").max(80),
-    email: z.string().trim().toLowerCase().email("Enter a valid email"),
-    role: z.enum(["ADMIN", "HR", "TEAM_LEAD", "STAFF"]),
-    departmentId: z.string(),
-});
+const schema = z
+    .object({
+        name: z.string().trim().min(2, "Name must be at least 2 characters").max(80),
+        email: z.string().trim().toLowerCase().email("Enter a valid email"),
+        role: z.enum(ROLES),
+        departmentId: z.string(),
+        armId: z.string(),
+    })
+    .superRefine((v, ctx) => {
+        if ((v.role === "STAFF" || v.role === "TEAM_LEAD") && !v.departmentId) {
+            ctx.addIssue({ code: "custom", path: ["departmentId"], message: "Choose a department" });
+        }
+        if (v.role === "ARM_HEAD" && !v.armId) {
+            ctx.addIssue({ code: "custom", path: ["armId"], message: "Choose an arm" });
+        }
+    });
 
 type FormValues = z.infer<typeof schema>;
 
 type Created = { name: string; email: string; temporaryPassword: string };
 
-const ALL_ROLES: Role[] = ["STAFF", "TEAM_LEAD", "HR", "ADMIN"];
-
 const ROLE_OPTIONS: { value: Role; label: string }[] = [
     { value: "STAFF", label: "Staff" },
     { value: "TEAM_LEAD", label: "Team Lead" },
     { value: "HR", label: "HR" },
+    { value: "ARM_HEAD", label: "Arm Head" },
+    { value: "CHIEF_OF_STAFF", label: "Chief of Staff" },
+    { value: "EXECUTIVE", label: "Executive" },
     { value: "ADMIN", label: "Admin" },
 ];
+
+const DEPARTMENT_ROLES: Role[] = ["STAFF", "TEAM_LEAD", "HR", "ADMIN"];
+const DEPARTMENT_REQUIRED: Role[] = ["STAFF", "TEAM_LEAD"];
 
 type Props = {
     open: boolean;
     onClose: () => void;
     departments: DepartmentOption[];
+    arms?: ArmOption[];
     allowedRoles?: Role[];
 };
 
@@ -45,20 +61,32 @@ const AddEmployeeModal = ({
     open,
     onClose,
     departments,
-    allowedRoles = ALL_ROLES,
+    arms = [],
+    allowedRoles = [...ROLES],
 }: Props) => {
     const router = useRouter();
     const [created, setCreated] = useState<Created | null>(null);
+
+    const defaultRole: Role = allowedRoles.includes("STAFF") ? "STAFF" : (allowedRoles[0] ?? "STAFF");
 
     const {
         register,
         handleSubmit,
         reset,
+        setValue,
+        watch,
         formState: { errors },
     } = useForm<FormValues>({
         resolver: zodResolver(schema),
-        defaultValues: { name: "", email: "", role: "STAFF", departmentId: "" },
+        defaultValues: { name: "", email: "", role: defaultRole, departmentId: "", armId: "" },
     });
+
+    const role = watch("role");
+
+    useEffect(() => {
+        setValue("departmentId", "");
+        setValue("armId", "");
+    }, [role, setValue]);
 
     const mutation = useMutation({
         mutationFn: async (values: FormValues) => {
@@ -69,7 +97,8 @@ const AddEmployeeModal = ({
                     name: values.name,
                     email: values.email,
                     role: values.role,
-                    departmentId: values.departmentId || null,
+                    departmentId: DEPARTMENT_ROLES.includes(values.role) ? values.departmentId || null : null,
+                    armId: values.role === "ARM_HEAD" ? values.armId : null,
                 }),
             });
             const data = await res.json().catch(() => ({}));
@@ -105,7 +134,6 @@ const AddEmployeeModal = ({
         };
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, mutation.isPending]);
 
     if (!open) return null;
@@ -118,6 +146,10 @@ const AddEmployeeModal = ({
             toast.error("Couldn't copy. Select and copy it manually.");
         }
     };
+
+    const chiefTaken = arms.some((a) => a.isShared && a.hasHead);
+    const showDepartment = DEPARTMENT_ROLES.includes(role);
+    const departmentRequired = DEPARTMENT_REQUIRED.includes(role);
 
     return (
         <div
@@ -138,9 +170,8 @@ const AddEmployeeModal = ({
                         </h2>
                         <p className="mt-2 text-sm text-gray-600">
                             Share these credentials securely with{" "}
-                            <span className="font-semibold text-gray-900">{created.name}</span>.
-                            The password is shown only once, and they must choose a new one at
-                            first sign-in.
+                            <span className="font-semibold text-gray-900">{created.name}</span>. The password is
+                            shown only once, and they must choose a new one at first sign-in.
                         </p>
 
                         <div className="mt-4 space-y-3">
@@ -161,9 +192,7 @@ const AddEmployeeModal = ({
                             </div>
 
                             <div>
-                                <p className="text-xs font-medium text-gray-500">
-                                    Temporary password
-                                </p>
+                                <p className="text-xs font-medium text-gray-500">Temporary password</p>
                                 <div className="mt-1 flex items-center gap-2">
                                     <code className="flex-1 select-all rounded-md bg-slate-100 px-3 py-2 font-mono text-sm">
                                         {created.temporaryPassword}
@@ -195,10 +224,7 @@ const AddEmployeeModal = ({
                             Add employee
                         </h2>
 
-                        <form
-                            onSubmit={handleSubmit((v) => mutation.mutate(v))}
-                            className="mt-4 space-y-4"
-                        >
+                        <form onSubmit={handleSubmit((v) => mutation.mutate(v))} className="mt-4 space-y-4">
                             <div>
                                 <label htmlFor="new-name" className="block text-sm font-medium">
                                     Full name
@@ -210,9 +236,7 @@ const AddEmployeeModal = ({
                                     placeholder="e.g. Ada Obi"
                                     autoFocus
                                 />
-                                {errors.name && (
-                                    <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>
-                                )}
+                                {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
                             </div>
 
                             <div>
@@ -231,48 +255,88 @@ const AddEmployeeModal = ({
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label htmlFor="new-role" className="block text-sm font-medium">
-                                        Role
-                                    </label>
-                                    <select
-                                        id="new-role"
-                                        {...register("role")}
-                                        className={inputCls}
-                                    >
-                                        {ROLE_OPTIONS.filter((o) =>
-                                            allowedRoles.includes(o.value)
-                                        ).map((o) => (
-                                            <option key={o.value} value={o.value}>
-                                                {o.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="new-dept" className="block text-sm font-medium">
-                                        Department
-                                    </label>
-                                    <select
-                                        id="new-dept"
-                                        {...register("departmentId")}
-                                        className={inputCls}
-                                    >
-                                        <option value="">No department</option>
-                                        {departments.map((d) => (
-                                            <option key={d.id} value={d.id}>
-                                                {d.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div>
+                                <label htmlFor="new-role" className="block text-sm font-medium">
+                                    Role
+                                </label>
+                                <select id="new-role" {...register("role")} className={inputCls}>
+                                    {ROLE_OPTIONS.filter((o) => allowedRoles.includes(o.value)).map((o) => (
+                                        <option
+                                            key={o.value}
+                                            value={o.value}
+                                            disabled={o.value === "CHIEF_OF_STAFF" && chiefTaken}
+                                        >
+                                            {o.label}
+                                            {o.value === "CHIEF_OF_STAFF" && chiefTaken ? " (already assigned)" : ""}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
+                            {showDepartment && (
+                                <div>
+                                    <label htmlFor="new-dept" className="block text-sm font-medium">
+                                        Department{departmentRequired ? "" : " (optional)"}
+                                    </label>
+                                    <select id="new-dept" {...register("departmentId")} className={inputCls}>
+                                        <option value="">
+                                            {departmentRequired ? "Choose a department" : "No department"}
+                                        </option>
+                                        {departments.map((d) => {
+                                            const blocked = role === "TEAM_LEAD" && d.hasLead;
+                                            return (
+                                                <option key={d.id} value={d.id} disabled={blocked}>
+                                                    {d.name}
+                                                    {blocked ? " (has a Team Lead)" : ""}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                    {errors.departmentId && (
+                                        <p className="mt-1 text-xs text-red-600">{errors.departmentId.message}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {role === "ARM_HEAD" && (
+                                <div>
+                                    <label htmlFor="new-arm" className="block text-sm font-medium">
+                                        Arm
+                                    </label>
+                                    <select id="new-arm" {...register("armId")} className={inputCls}>
+                                        <option value="">Choose an arm</option>
+                                        {arms
+                                            .filter((a) => !a.isShared)
+                                            .map((a) => (
+                                                <option key={a.id} value={a.id} disabled={a.hasHead}>
+                                                    {a.name}
+                                                    {a.hasHead ? " (already has a head)" : ""}
+                                                </option>
+                                            ))}
+                                    </select>
+                                    {errors.armId && (
+                                        <p className="mt-1 text-xs text-red-600">{errors.armId.message}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {role === "CHIEF_OF_STAFF" && (
+                                <p className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                                    Automatically becomes head of Group Shared Services and lead of the Executive /
+                                    Board Office. Only one Chief of Staff can exist.
+                                </p>
+                            )}
+
+                            {role === "EXECUTIVE" && (
+                                <p className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                                    Executives sit above every arm and department and get a company-wide, read-only
+                                    view.
+                                </p>
+                            )}
+
                             <p className="text-xs text-gray-500">
-                                A temporary password is generated for you to share. The person
-                                must change it at first sign-in.
+                                A temporary password is generated for you to share. The person must change it at
+                                first sign-in.
                             </p>
 
                             <div className="flex justify-end gap-2 pt-2">

@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import AddEmployeeModal, { type DepartmentOption } from "./AddEmployeeModal";
-import { Role } from "@/types/rbac";
+import AddEmployeeModal, {
+    type DepartmentOption,
+    type ArmOption,
+} from "./AddEmployeeModal";
+import type { Role } from "@/types/rbac";
 
 type Props = {
     departments: DepartmentOption[];
-    allowedRoles?: Role[];
+    arms: ArmOption[];
+    allowedRoles: Role[];
 };
 
-export function AddEmployeeButton({ departments, allowedRoles }: Props) {
+export function AddEmployeeButton({ departments, arms, allowedRoles }: Props) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -27,6 +31,7 @@ export function AddEmployeeButton({ departments, allowedRoles }: Props) {
                 open={open}
                 onClose={() => setOpen(false)}
                 departments={departments}
+                arms={arms}
                 allowedRoles={allowedRoles}
             />
         </>

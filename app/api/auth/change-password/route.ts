@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     const matches = await bcrypt.compare(currentPassword, record.passwordHash);
     if (!matches) {
       return NextResponse.json(
-        { error: "Temporary password is incorrect" },
+        { error: "Current password is incorrect" },
         { status: 400 },
       );
     }

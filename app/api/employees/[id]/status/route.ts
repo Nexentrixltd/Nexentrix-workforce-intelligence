@@ -9,6 +9,15 @@ type Ctx = { params: Promise<{ id: string }> };
 
 const schema = z.object({ active: z.boolean() });
 
+class RouteError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+  }
+}
+
 export async function POST(req: Request, { params }: Ctx) {
   const auth = await requireApiPermission("DEACTIVATE_USER");
   if (!auth.ok) return auth.response;
@@ -30,56 +39,80 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       const target = await tx.user.findUnique({
         where: { id },
-        select: { role: true, deactivatedAt: true },
+        select: { name: true, role: true, deactivatedAt: true },
       });
-      if (!target) return { error: "User not found", status: 404 };
+      if (!target) throw new RouteError("User not found", 404);
 
       if (!canManageUser(actorRole, target.role as Role)) {
-        return {
-          error: "You don't have permission to modify this account",
-          status: 403,
-        };
+        throw new RouteError(
+          "You don't have permission to modify this account",
+          403,
+        );
       }
 
-      if (!active) {
-        if (target.role === "ADMIN" && !target.deactivatedAt) {
-          const activeAdmins = await tx.user.count({
-            where: { role: "ADMIN", deactivatedAt: null },
+      if (active) {
+        if (target.deactivatedAt) {
+          await tx.user.update({
+            where: { id },
+            data: { deactivatedAt: null },
           });
-          if (activeAdmins <= 1) {
-            return {
-              error: "At least one active admin is required",
-              status: 409,
-            };
-          }
         }
-
-        await tx.user.update({
-          where: { id },
-          data: { deactivatedAt: new Date() },
-        });
-        await tx.session.updateMany({
-          where: { userId: id, revokedAt: null },
-          data: { revokedAt: new Date() },
-        });
-      } else {
-        await tx.user.update({ where: { id }, data: { deactivatedAt: null } });
+        return;
       }
 
-      return { ok: true };
+      if (target.deactivatedAt) return;
+
+      if (target.role === "ADMIN") {
+        const activeAdmins = await tx.user.count({
+          where: { role: "ADMIN", deactivatedAt: null },
+        });
+        if (activeAdmins <= 1) {
+          throw new RouteError("At least one active admin is required", 409);
+        }
+      }
+
+      const [headedArm, ledDepartments] = await Promise.all([
+        tx.arm.findFirst({ where: { headId: id }, select: { name: true } }),
+        tx.department.findMany({
+          where: { teamLeadId: id },
+          select: { name: true },
+        }),
+      ]);
+
+      if (headedArm) {
+        throw new RouteError(
+          `${target.name} heads ${headedArm.name}. Assign a replacement from the Arms page first.`,
+          409,
+        );
+      }
+      if (ledDepartments.length > 0) {
+        throw new RouteError(
+          `${target.name} leads ${ledDepartments.map((d) => d.name).join(", ")}. Replace them as Team Lead from the Departments page first.`,
+          409,
+        );
+      }
+
+      await tx.user.update({
+        where: { id },
+        data: { deactivatedAt: new Date() },
+      });
+      await tx.session.updateMany({
+        where: { userId: id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
     });
 
-    if ("error" in result) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: result.status },
-      );
-    }
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof RouteError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
+    }
     console.error("[User Status] Failed:", error);
     return NextResponse.json(
       { error: "Failed to update status" },

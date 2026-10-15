@@ -12,9 +12,13 @@ import { Role } from "@/types/rbac";
 export type DepartmentRow = {
     id: string;
     name: string;
-    code: string;
+    slug: string;
+    focus: string | null;
+    status: "ACTIVE" | "PLANNED";
+    armId: string;
+    armName: string;
+    teamLead: { id: string; name: string } | null;
     members: number;
-    createdAt: string;
 };
 
 const departmentColors = [
@@ -34,16 +38,30 @@ function colorFor(id: string) {
     return departmentColors[sum % departmentColors.length];
 }
 
-function formatDate(value: string) {
-    return new Date(value).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-    });
-}
-
 const iconBtn =
     "cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700";
+
+const disabledBtn = "cursor-not-allowed rounded-lg p-2 text-slate-300";
+
+function StatusBadge({ status }: { status: DepartmentRow["status"] }) {
+    const active = status === "ACTIVE";
+    return (
+        <span
+            className={`inline-block rounded-md px-2 py-0.5 text-xs font-medium ${active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                }`}
+        >
+            {active ? "Active" : "Planned"}
+        </span>
+    );
+}
+
+function LeadLabel({ lead }: { lead: DepartmentRow["teamLead"] }) {
+    return lead ? (
+        <span className="text-sm text-slate-700">{lead.name}</span>
+    ) : (
+        <span className="text-sm italic text-slate-400">Unassigned</span>
+    );
+}
 
 type Props = {
     departments: DepartmentRow[];
@@ -61,60 +79,93 @@ export function DepartmentsTable({
     basePath,
 }: Props) {
     const [search, setSearch] = useState("");
+    const [armFilter, setArmFilter] = useState("ALL");
     const [toDelete, setToDelete] = useState<DepartmentToDelete | null>(null);
     const [toEdit, setToEdit] = useState<DepartmentToEdit | null>(null);
 
+    const arms = useMemo(() => {
+        const seen = new Map<string, string>();
+        for (const d of departments) if (!seen.has(d.armId)) seen.set(d.armId, d.armName);
+        return Array.from(seen, ([id, name]) => ({ id, name }));
+    }, [departments]);
+
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
-        if (!q) return departments;
-        return departments.filter((d) =>
-            [d.name, d.code].some((v) => v.toLowerCase().includes(q))
-        );
-    }, [departments, search]);
+        return departments.filter((d) => {
+            if (armFilter !== "ALL" && d.armId !== armFilter) return false;
+            if (!q) return true;
+            return [d.name, d.armName, d.teamLead?.name ?? ""].some((v) =>
+                v.toLowerCase().includes(q),
+            );
+        });
+    }, [departments, search, armFilter]);
 
-    const renderActions = (d: DepartmentRow) => (
-        <div className="flex items-center justify-end gap-1">
-            <Link
-                href={`${basePath}/${d.id}`}
-                aria-label={`View ${d.name}`}
-                title="View"
-                className={iconBtn}
-            >
-                <Eye size={18} />
-            </Link>
+    const renderActions = (d: DepartmentRow) => {
+        const deletable = d.members === 0 && !d.teamLead;
 
-            {canEdit && (
-                <button
-                    type="button"
-                    onClick={() => setToEdit({ id: d.id, name: d.name, code: d.code })}
-                    aria-label={`Edit ${d.name}`}
-                    title="Edit"
+        return (
+            <div className="flex items-center justify-end gap-1">
+                <Link
+                    href={`${basePath}/${d.id}`}
+                    aria-label={`View ${d.name}`}
+                    title="View"
                     className={iconBtn}
                 >
-                    <Pencil size={18} />
-                </button>
-            )}
+                    <Eye size={18} />
+                </Link>
 
-            {canDelete && (
-                <button
-                    type="button"
-                    onClick={() => setToDelete({ id: d.id, name: d.name, members: d.members })}
-                    aria-label={`Delete ${d.name}`}
-                    title="Delete"
-                    className={`${iconBtn} hover:bg-red-50 hover:text-red-600`}
-                >
-                    <Trash2 size={18} />
-                </button>
-            )}
-        </div>
-    );
+                {canEdit && (
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setToEdit({
+                                id: d.id,
+                                name: d.name,
+                                focus: d.focus,
+                                status: d.status,
+                                teamLeadId: d.teamLead?.id ?? null,
+                            })
+                        }
+                        aria-label={`Edit ${d.name}`}
+                        title="Edit"
+                        className={iconBtn}
+                    >
+                        <Pencil size={18} />
+                    </button>
+                )}
+
+                {canDelete &&
+                    (deletable ? (
+                        <button
+                            type="button"
+                            onClick={() => setToDelete({ id: d.id, name: d.name, members: d.members })}
+                            aria-label={`Delete ${d.name}`}
+                            title="Delete"
+                            className={`${iconBtn} hover:bg-red-50 hover:text-red-600`}
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            disabled
+                            aria-label={`${d.name} cannot be deleted`}
+                            title="Reassign its members and Team Lead before deleting"
+                            className={disabledBtn}
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    ))}
+            </div>
+        );
+    };
 
     const emptyState = (
         <div className="px-6 py-16 text-center">
             <Filter size={30} className="mx-auto mb-3 text-slate-300" />
             <p className="font-semibold text-slate-700">No departments found</p>
             <p className="mt-1 text-sm text-slate-500">
-                Try searching with a different name or code.
+                Try a different search or arm filter.
             </p>
         </div>
     );
@@ -125,7 +176,7 @@ export function DepartmentsTable({
                 <div className="min-w-0">
                     <h2 className="text-lg font-bold">All Departments</h2>
                     <p className="mt-1 text-sm text-slate-500">
-                        Browse and manage your organization&apos;s departments.
+                        Browse departments by arm, Team Lead and rollout status.
                     </p>
                 </div>
                 <span className="w-fit shrink-0 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700">
@@ -133,7 +184,7 @@ export function DepartmentsTable({
                 </span>
             </div>
 
-            <div className="border-b border-slate-100 p-4">
+            <div className="flex flex-col gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center">
                 <div className="relative w-full md:max-w-md">
                     <Search
                         size={18}
@@ -142,14 +193,27 @@ export function DepartmentsTable({
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by name or code..."
+                        placeholder="Search by department, arm or Team Lead..."
                         aria-label="Search departments"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                     />
                 </div>
+
+                <select
+                    value={armFilter}
+                    onChange={(e) => setArmFilter(e.target.value)}
+                    aria-label="Filter by arm"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 md:w-auto"
+                >
+                    <option value="ALL">All arms</option>
+                    {arms.map((a) => (
+                        <option key={a.id} value={a.id}>
+                            {a.name}
+                        </option>
+                    ))}
+                </select>
             </div>
 
-            {/* Mobile: cards */}
             <div className="md:hidden">
                 {filtered.length === 0 ? (
                     emptyState
@@ -164,23 +228,20 @@ export function DepartmentsTable({
                                         {d.name.slice(0, 2).toUpperCase()}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-semibold text-slate-800">
-                                            {d.name}
-                                        </p>
-                                        <span className="mt-1 inline-block rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs font-medium text-slate-600">
-                                            {d.code}
-                                        </span>
+                                        <p className="truncate text-sm font-semibold text-slate-800">{d.name}</p>
+                                        <p className="mt-0.5 truncate text-xs text-slate-500">{d.armName}</p>
+                                        <div className="mt-1.5 flex items-center gap-2">
+                                            <StatusBadge status={d.status} />
+                                            <LeadLabel lead={d.teamLead} />
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div className="mt-3 flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-4 text-sm text-slate-500">
-                                        <span className="flex items-center gap-1.5">
-                                            <Users size={15} className="text-slate-400" />
-                                            {d.members}
-                                        </span>
-                                        <span>{formatDate(d.createdAt)}</span>
-                                    </div>
+                                    <span className="flex items-center gap-1.5 text-sm text-slate-500">
+                                        <Users size={15} className="text-slate-400" />
+                                        {d.members}
+                                    </span>
                                     {renderActions(d)}
                                 </div>
                             </li>
@@ -189,15 +250,15 @@ export function DepartmentsTable({
                 )}
             </div>
 
-            {/* Desktop: table */}
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-left">
                     <thead className="bg-slate-50">
                         <tr className="text-xs uppercase tracking-wider text-slate-500">
                             <th className="px-6 py-4">Department</th>
-                            <th className="px-6 py-4">Department Code</th>
+                            <th className="px-6 py-4">Arm</th>
+                            <th className="px-6 py-4">Team Lead</th>
+                            {/* <th className="px-6 py-4">Status</th> */}
                             <th className="px-6 py-4">Members</th>
-                            <th className="whitespace-nowrap px-6 py-4">Date Created</th>
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
@@ -211,31 +272,33 @@ export function DepartmentsTable({
                                         >
                                             {d.name.slice(0, 2).toUpperCase()}
                                         </div>
-                                        <span className="text-sm font-semibold text-slate-800">
-                                            {d.name}
-                                        </span>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold text-slate-800">{d.name}</p>
+                                            {d.focus && (
+                                                <p className="max-w-xs truncate text-xs text-slate-500">{d.focus}</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </td>
+                                <td className="px-6 py-4 text-sm text-slate-600">{d.armName}</td>
                                 <td className="px-6 py-4">
-                                    <span className="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-xs font-medium text-slate-600">
-                                        {d.code}
-                                    </span>
+                                    <LeadLabel lead={d.teamLead} />
                                 </td>
+                                {/* <td className="px-6 py-4">
+                                    <StatusBadge status={d.status} />
+                                </td> */}
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2 text-sm text-slate-600">
                                         <Users size={16} className="text-slate-400" />
                                         {d.members}
                                     </div>
                                 </td>
-                                <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-500">
-                                    {formatDate(d.createdAt)}
-                                </td>
                                 <td className="px-6 py-4">{renderActions(d)}</td>
                             </tr>
                         ))}
                         {filtered.length === 0 && (
                             <tr>
-                                <td colSpan={5}>{emptyState}</td>
+                                <td colSpan={6}>{emptyState}</td>
                             </tr>
                         )}
                     </tbody>
@@ -243,13 +306,10 @@ export function DepartmentsTable({
             </div>
 
             <div className="border-t border-slate-100 px-4 py-4 text-sm text-slate-500 sm:px-5">
-                Showing {filtered.length} of {departments.length} departments
+                Showing <span className="font-bold">{filtered.length}</span> of {departments.length} departments
             </div>
 
-            <ConfirmDeleteDepartmentModal
-                department={toDelete}
-                onClose={() => setToDelete(null)}
-            />
+            <ConfirmDeleteDepartmentModal department={toDelete} onClose={() => setToDelete(null)} />
             <EditDepartmentModal
                 department={toEdit}
                 viewerRole={viewerRole}

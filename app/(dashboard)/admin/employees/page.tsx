@@ -4,9 +4,12 @@ import { Error as ErrorState } from "@/components/shared/Error";
 import { requireRole } from "@/lib/auth/session";
 import { EmployeesTable } from "@/components/admin/employees/EmployeesTable";
 import { AddEmployeeButton } from "@/components/admin/employees/AddEmployeeButton";
+import { Role, ROLES } from "@/types/rbac";
+import { canAssignRole } from "@/lib/permissions";
 
 export default async function AdminStaffPage() {
     const admin = await requireRole(["ADMIN"]);
+    const viewerRole = admin.role as Role;
 
     let data;
 
@@ -26,7 +29,11 @@ export default async function AdminStaffPage() {
             }),
             prisma.department.findMany({
                 orderBy: { name: "asc" },
-                select: { id: true, name: true },
+                select: { id: true, name: true, teamLeadId: true, },
+            }),
+            prisma.arm.findMany({
+                select: { id: true, name: true, isShared: true, headId: true },
+                orderBy: [{ isShared: "desc" }, { name: "asc" }],
             }),
         ]);
     } catch (error) {
@@ -34,7 +41,22 @@ export default async function AdminStaffPage() {
         return <ErrorState heading="Unable to load Staff" />;
     }
 
-    const [users, departments] = data;
+    const [users, departments, arms] = data;
+
+    const departmentOptions = departments.map((d) => ({
+        id: d.id,
+        name: d.name,
+        hasLead: !!d.teamLeadId,
+    }));
+
+    const armOptions = arms.map((a) => ({
+        id: a.id,
+        name: a.name,
+        isShared: a.isShared,
+        hasHead: !!a.headId,
+    }));
+
+    const allowedRoles = ROLES.filter((r) => canAssignRole(viewerRole, r));
 
     const stats = [
         {
@@ -87,7 +109,11 @@ export default async function AdminStaffPage() {
                     </div>
 
                     <div className="w-full shrink-0 sm:w-auto [&>button]:w-full sm:[&>button]:w-auto">
-                        <AddEmployeeButton departments={departments} />
+                        <AddEmployeeButton
+                            departments={departmentOptions}
+                            arms={armOptions}
+                            allowedRoles={allowedRoles}
+                        />
                     </div>
                 </div>
 

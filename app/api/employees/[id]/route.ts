@@ -4,9 +4,25 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireApiPermission } from "@/lib/auth/session";
 import { canManageUser } from "@/lib/permissions";
-import { Role } from "@/types/rbac";
+import { ROLES, type Role } from "@/types/rbac";
 
 type Ctx = { params: Promise<{ id: string }> };
+
+const ARM_ROLES: Role[] = ["ARM_HEAD", "CHIEF_OF_STAFF"];
+const DEPARTMENTLESS_ROLES: Role[] = [
+  "ARM_HEAD",
+  "CHIEF_OF_STAFF",
+  "EXECUTIVE",
+];
+
+class RouteError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+  }
+}
 
 const schema = z
   .object({
@@ -17,7 +33,7 @@ const schema = z
       .toLowerCase()
       .email("Enter a valid email")
       .optional(),
-    role: z.enum(["ADMIN", "HR", "TEAM_LEAD", "STAFF"]).optional(),
+    role: z.enum(ROLES).optional(),
     departmentId: z.string().min(1).nullable().optional(),
   })
   .refine((v) => Object.keys(v).length > 0, { message: "Nothing to update" });
@@ -38,55 +54,121 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
   const data = parsed.data;
 
-  if (data.role && id === auth.user.id) {
+  if (data.role && id === auth.user.id && data.role !== actorRole) {
     return NextResponse.json(
-      { error: "You can't change your own role" },
+      { error: "You can't change your own role." },
       { status: 403 },
     );
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       const target = await tx.user.findUnique({
         where: { id },
-        select: { role: true, deactivatedAt: true },
+        select: { role: true, deactivatedAt: true, departmentId: true },
       });
-      if (!target) return { error: "User not found", status: 404 };
+      if (!target) throw new RouteError("User not found", 404);
 
       if (!canManageUser(actorRole, target.role as Role)) {
-        return {
-          error: "You don't have permission to modify this account",
-          status: 403,
-        };
+        throw new RouteError(
+          "You don't have permission to modify this account",
+          403,
+        );
       }
 
-      const roleChanging = !!data.role && data.role !== target.role;
+      const currentRole = target.role as Role;
+      const nextRole = (data.role ?? currentRole) as Role;
+      const roleChanging = nextRole !== currentRole;
 
       if (roleChanging && actorRole !== "ADMIN") {
-        return { error: "Only administrators can change roles", status: 403 };
+        throw new RouteError("Only administrators can change roles", 403);
       }
 
-      if (data.departmentId) {
+      if (
+        roleChanging &&
+        (ARM_ROLES.includes(currentRole) || ARM_ROLES.includes(nextRole))
+      ) {
+        throw new RouteError(
+          "Arm Head and Chief of Staff assignments are managed from the Arms page",
+          409,
+        );
+      }
+
+      let finalDepartmentId =
+        data.departmentId === undefined
+          ? target.departmentId
+          : data.departmentId;
+
+      if (DEPARTMENTLESS_ROLES.includes(nextRole)) {
+        if (!roleChanging && finalDepartmentId !== target.departmentId) {
+          throw new RouteError(
+            "This role sits outside departments and can't be moved",
+            400,
+          );
+        }
+        if (roleChanging) finalDepartmentId = null;
+      }
+
+      const departmentChanging = finalDepartmentId !== target.departmentId;
+
+      if (departmentChanging && finalDepartmentId) {
         const dept = await tx.department.findUnique({
-          where: { id: data.departmentId },
+          where: { id: finalDepartmentId },
           select: { id: true },
         });
-        if (!dept) return { error: "Department not found", status: 400 };
+        if (!dept) throw new RouteError("Department not found", 400);
       }
 
-      if (roleChanging && target.role === "ADMIN" && !target.deactivatedAt) {
+      if (roleChanging || departmentChanging) {
+        const led = await tx.department.findMany({
+          where: { teamLeadId: id },
+          select: { name: true },
+        });
+        if (led.length > 0) {
+          throw new RouteError(
+            `This person leads ${led.map((d) => d.name).join(", ")}. Replace them as Team Lead from the Departments page first.`,
+            409,
+          );
+        }
+      }
+
+      if (roleChanging && nextRole === "TEAM_LEAD") {
+        if (!finalDepartmentId) {
+          throw new RouteError(
+            "Choose a department before making someone a Team Lead",
+            400,
+          );
+        }
+        const claimed = await tx.department.updateMany({
+          where: { id: finalDepartmentId, teamLeadId: null },
+          data: { teamLeadId: id, status: "ACTIVE" },
+        });
+        if (claimed.count === 0) {
+          throw new RouteError(
+            "That department already has a Team Lead. Replace them from the Departments page.",
+            409,
+          );
+        }
+      }
+
+      if (roleChanging && currentRole === "ADMIN" && !target.deactivatedAt) {
         const activeAdmins = await tx.user.count({
           where: { role: "ADMIN", deactivatedAt: null },
         });
         if (activeAdmins <= 1) {
-          return {
-            error: "At least one active admin is required",
-            status: 409,
-          };
+          throw new RouteError("At least one active admin is required", 409);
         }
       }
 
-      await tx.user.update({ where: { id }, data });
+      await tx.user.update({
+        where: { id },
+        data: {
+          ...(data.name !== undefined && { name: data.name }),
+          ...(data.email !== undefined && { email: data.email }),
+          ...(roleChanging && { role: nextRole }),
+          ...(departmentChanging && { departmentId: finalDepartmentId }),
+        },
+      });
 
       if (roleChanging) {
         await tx.session.updateMany({
@@ -94,18 +176,16 @@ export async function PATCH(req: Request, { params }: Ctx) {
           data: { revokedAt: new Date() },
         });
       }
-
-      return { ok: true };
     });
 
-    if ("error" in result) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: result.status },
-      );
-    }
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof RouteError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
+    }
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"

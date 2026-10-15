@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,20 +13,24 @@ import { Role } from "@/types/rbac";
 export type DepartmentToEdit = {
     id: string;
     name: string;
-    code: string;
+    focus: string | null;
+    status: "ACTIVE" | "PLANNED";
+    teamLeadId: string | null;
 };
 
 const schema = z.object({
     name: z.string().trim().min(2, "Name must be at least 2 characters").max(60),
-    code: z
-        .string()
-        .trim()
-        .min(2, "Code must be at least 2 characters")
-        .max(10, "Code must be at most 10 characters")
-        .regex(/^[A-Za-z0-9-]+$/, "Letters, numbers and dashes only"),
+    focus: z.string().trim().max(200, "Keep the focus under 200 characters"),
+    status: z.enum(["ACTIVE", "PLANNED"]),
 });
 
 type FormValues = z.infer<typeof schema>;
+
+type DepartmentDetail = {
+    userIds: string[];
+    teamLeadId: string | null;
+    leadLocked: boolean;
+};
 
 type Props = {
     department: DepartmentToEdit | null;
@@ -34,10 +38,14 @@ type Props = {
     viewerRole: Role;
 };
 
+const inputCls =
+    "mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary";
+
 const EditDepartmentModal = ({ department, onClose, viewerRole }: Props) => {
     const router = useRouter();
     const queryClient = useQueryClient();
     const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [leadId, setLeadId] = useState<string>("");
 
     const {
         register,
@@ -52,7 +60,7 @@ const EditDepartmentModal = ({ department, onClose, viewerRole }: Props) => {
         staleTime: 0,
         queryFn: async (): Promise<UserOption[]> => {
             const res = await fetch(
-                `/api/employees?departmentId=${encodeURIComponent(department!.id)}`
+                `/api/employees?departmentId=${encodeURIComponent(department!.id)}`,
             );
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error ?? "Failed to load users");
@@ -65,7 +73,7 @@ const EditDepartmentModal = ({ department, onClose, viewerRole }: Props) => {
         enabled: !!department,
         staleTime: 0,
         gcTime: 0,
-        queryFn: async (): Promise<{ userIds: string[] }> => {
+        queryFn: async (): Promise<DepartmentDetail> => {
             const res = await fetch(`/api/departments/${department!.id}`);
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error ?? "Failed to load department");
@@ -75,15 +83,34 @@ const EditDepartmentModal = ({ department, onClose, viewerRole }: Props) => {
 
     useEffect(() => {
         if (department) {
-            reset({ name: department.name, code: department.code });
+            reset({
+                name: department.name,
+                focus: department.focus ?? "",
+                status: department.status,
+            });
         }
     }, [department, reset]);
 
     useEffect(() => {
         if (detailQuery.data) {
             setSelected(new Set(detailQuery.data.userIds));
+            setLeadId(detailQuery.data.teamLeadId ?? "");
         }
     }, [detailQuery.data]);
+
+    const leadLocked = detailQuery.data?.leadLocked ?? false;
+
+    const leadOptions = useMemo(
+        () =>
+            (usersQuery.data ?? []).filter(
+                (u) =>
+                    selected.has(u.id) &&
+                    (String(u.role) === "STAFF" || String(u.role) === "TEAM_LEAD"),
+            ),
+        [usersQuery.data, selected],
+    );
+
+    const leadValue = leadOptions.some((o) => o.id === leadId) ? leadId : "";
 
     const toggleUser = (id: string) => {
         setSelected((prev) => {
@@ -101,8 +128,10 @@ const EditDepartmentModal = ({ department, onClose, viewerRole }: Props) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: values.name,
-                    code: values.code.toUpperCase(),
+                    focus: values.focus || null,
+                    status: values.status,
                     userIds: Array.from(selected),
+                    ...(leadLocked ? {} : { teamLeadId: leadValue || null }),
                 }),
             });
             const data = await res.json().catch(() => ({}));
@@ -134,9 +163,7 @@ const EditDepartmentModal = ({ department, onClose, viewerRole }: Props) => {
         if (!mutation.isPending) onClose();
     };
 
-    // Saving before the current members load would wipe them
     const membersReady = detailQuery.isSuccess;
-
     const loadError = usersQuery.error ?? detailQuery.error;
 
     return (
@@ -148,7 +175,7 @@ const EditDepartmentModal = ({ department, onClose, viewerRole }: Props) => {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="edit-department-title"
-                className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-xl bg-white p-6 shadow-xl"
+                className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 <h2 id="edit-department-title" className="text-lg font-semibold">
@@ -164,30 +191,68 @@ const EditDepartmentModal = ({ department, onClose, viewerRole }: Props) => {
                             <label htmlFor="edit-name" className="block text-sm font-medium">
                                 Name
                             </label>
-                            <input
-                                id="edit-name"
-                                {...register("name")}
-                                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary"
-                                autoFocus
-                            />
+                            <input id="edit-name" {...register("name")} className={inputCls} autoFocus />
                             {errors.name && (
                                 <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor="edit-code" className="block text-sm font-medium">
-                                Code
+                            <label htmlFor="edit-status" className="block text-sm font-medium">
+                                Status
                             </label>
-                            <input
-                                id="edit-code"
-                                {...register("code")}
-                                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm uppercase outline-none focus:border-primary"
-                            />
-                            {errors.code && (
-                                <p className="mt-1 text-xs text-red-600">{errors.code.message}</p>
-                            )}
+                            <select id="edit-status" {...register("status")} className={inputCls}>
+                                <option value="PLANNED">Planned</option>
+                                <option value="ACTIVE">Active</option>
+                            </select>
                         </div>
+                    </div>
+
+                    <div>
+                        <label htmlFor="edit-focus" className="block text-sm font-medium">
+                            Focus
+                        </label>
+                        <input
+                            id="edit-focus"
+                            {...register("focus")}
+                            placeholder="What this department is responsible for"
+                            className={inputCls}
+                        />
+                        {errors.focus && (
+                            <p className="mt-1 text-xs text-red-600">{errors.focus.message}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label htmlFor="edit-lead" className="block text-sm font-medium">
+                            Team Lead
+                        </label>
+                        {leadLocked ? (
+                            <p className="mt-1 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                                This department&apos;s lead is managed by an Admin and can&apos;t be changed here.
+                            </p>
+                        ) : (
+                            <>
+                                <select
+                                    id="edit-lead"
+                                    value={leadValue}
+                                    onChange={(e) => setLeadId(e.target.value)}
+                                    disabled={!membersReady}
+                                    className={inputCls}
+                                >
+                                    <option value="">No Team Lead</option>
+                                    {leadOptions.map((u) => (
+                                        <option key={u.id} value={u.id}>
+                                            {u.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    The lead must be a selected member. Staff chosen as lead become Team Lead; a
+                                    replaced lead returns to Staff unless they lead another department.
+                                </p>
+                            </>
+                        )}
                     </div>
 
                     <MemberPicker

@@ -24,20 +24,28 @@ export default async function HrDepartmentsPage() {
                 select: {
                     id: true,
                     name: true,
-                    code: true,
+                    slug: true,
+                    focus: true,
+                    status: true,
+                    arm: { select: { id: true, name: true, isShared: true } },
+                    teamLead: { select: { id: true, name: true } },
                     createdAt: true,
-                    _count: { select: { users: true } },
+                    _count: { select: { members: true } },
                 },
             }),
             prisma.user.count({ where: { departmentId: null } }),
+            prisma.arm.findMany({
+                select: { id: true, name: true },
+                orderBy: [{ isShared: "desc" }, { name: "asc" }],
+            }),
         ]);
     } catch (error) {
         console.error("[HR Departments] Failed to load:", error);
         return <ErrorState heading="Unable to load Departments" />;
     }
 
-    const [departments, unassigned] = data;
-    const counts = departments.map((d) => d._count.users);
+    const [departments, unassigned, arms] = data;
+    const counts = departments.map((d) => d._count.members);
 
     const stats = [
         {
@@ -66,12 +74,19 @@ export default async function HrDepartmentsPage() {
         },
     ];
 
-    const rows = departments.map((d) => ({
-        id: d.id,
-        name: d.name,
-        code: d.code,
-        members: d._count.users,
-        createdAt: d.createdAt.toISOString(),
+    const tableDepartments = departments.map((department) => ({
+        id: department.id,
+        name: department.name,
+        slug: department.slug,
+        focus: department.focus,
+        status: department.status,
+        armId: department.arm.id,
+        armName: department.arm.name,
+        teamLead: department.teamLead
+            ? { id: department.teamLead.id, name: department.teamLead.name }
+            : null,
+        members: department._count.members,
+        createdAt: department.createdAt.toISOString(),
     }));
 
     return (
@@ -89,7 +104,7 @@ export default async function HrDepartmentsPage() {
 
                     {canCreate && (
                         <div className="w-full shrink-0 sm:w-auto [&>button]:w-full sm:[&>button]:w-auto">
-                            <AddDepartmentButton viewerRole="HR" />
+                            <AddDepartmentButton viewerRole={role} arms={arms} />
                         </div>
                     )}
                 </div>
@@ -97,7 +112,7 @@ export default async function HrDepartmentsPage() {
                 <StatGrid stats={stats} />
 
                 <DepartmentsTable
-                    departments={rows}
+                    departments={tableDepartments}
                     viewerRole="HR"
                     canEdit={canEdit}
                     canDelete={canDelete}

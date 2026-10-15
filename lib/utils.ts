@@ -30,6 +30,8 @@ import {
   IconBellFilled,
   IconSettings,
   IconSettingsFilled,
+  IconSitemap,
+  IconSitemapFilled,
 } from "@tabler/icons-react";
 
 export function cn(...inputs: ClassValue[]) {
@@ -169,6 +171,13 @@ export const dashboardNav: DashboardNavSection[] = [
     label: "Management",
     items: [
       {
+        label: "Arms",
+        href: "/admin/arms",
+        iconOutline: IconSitemap,
+        iconFilled: IconSitemapFilled,
+        roles: ROLES.ADMIN_ONLY,
+      },
+      {
         label: "Employees",
         href: "/admin/employees",
         iconOutline: IconUsers,
@@ -267,3 +276,34 @@ export const dashboardNav: DashboardNavSection[] = [
     ],
   },
 ];
+
+export const ROLE_STYLES: Record<Role, { label: string; cls: string }> = {
+  ADMIN: {
+    label: "Admin",
+    cls: "bg-rose-50 text-rose-700",
+  },
+  EXECUTIVE: {
+    label: "Executive",
+    cls: "bg-amber-50 text-amber-700",
+  },
+  CHIEF_OF_STAFF: {
+    label: "Chief of Staff",
+    cls: "bg-blue-50 text-blue-700",
+  },
+  ARM_HEAD: {
+    label: "Arm Head",
+    cls: "bg-cyan-50 text-cyan-700",
+  },
+  HR: {
+    label: "HR",
+    cls: "bg-violet-50 text-violet-700",
+  },
+  TEAM_LEAD: {
+    label: "Team Lead",
+    cls: "bg-emerald-50 text-emerald-700",
+  },
+  STAFF: {
+    label: "Staff",
+    cls: "bg-slate-100 text-slate-700",
+  },
+};

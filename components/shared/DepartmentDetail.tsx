@@ -27,9 +27,13 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
             where: { id },
             select: {
                 name: true,
-                code: true,
+                focus: true,
+                status: true,
+                teamLeadId: true,
                 createdAt: true,
-                users: {
+                arm: { select: { name: true } },
+                teamLead: { select: { name: true } },
+                members: {
                     orderBy: { name: "asc" },
                     select: {
                         id: true,
@@ -48,7 +52,8 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
 
     if (!department) notFound();
 
-    const activeCount = department.users.filter((u) => !u.deactivatedAt).length;
+    const activeCount = department.members.filter((u) => !u.deactivatedAt).length;
+    const active = department.status === "ACTIVE";
 
     return (
         <div className="w-full">
@@ -66,21 +71,45 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
                             <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
                                 {department.name}
                             </h1>
-                            <span className="rounded-md bg-slate-100 px-2.5 py-1 font-mono text-xs font-medium text-slate-600">
-                                {department.code}
+                            <span
+                                className={`rounded-md px-2.5 py-1 text-xs font-medium ${active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                                    }`}
+                            >
+                                {active ? "Active" : "Planned"}
+                            </span>
+                            <span className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
+                                {department.arm.name}
                             </span>
                         </div>
-                        <p className="mt-2 text-sm text-secondary">
-                            {department.users.length}{" "}
-                            {department.users.length === 1 ? "member" : "members"} ({activeCount}{" "}
-                            active) · Created {formatDate(department.createdAt.toISOString())}
-                        </p>
+
+                        <div className="mt-2 flex flex-col items-start gap-1">
+                            {department.focus && <p className="text-base">{department.focus}</p>}
+                            <p className="text-sm text-secondary">
+                                Team Lead:{" "}
+                                {department.teamLead ? (
+                                    <span className="font-medium text-slate-800">{department.teamLead.name}</span>
+                                ) : (
+                                    <span className="italic text-slate-400">Unassigned</span>
+                                )}
+                            </p>
+                            <p className="text-sm text-secondary">
+                                {department.members.length}{" "}
+                                {department.members.length === 1 ? "member" : "members"} ({activeCount} active) ·
+                                Created {formatDate(department.createdAt.toISOString())}
+                            </p>
+                        </div>
                     </div>
 
                     {canEdit && (
                         <div className="w-full shrink-0 sm:w-auto [&>button]:w-full sm:[&>button]:w-auto">
                             <EditDepartmentButton
-                                department={{ id, name: department.name, code: department.code }}
+                                department={{
+                                    id,
+                                    name: department.name,
+                                    focus: department.focus,
+                                    status: department.status,
+                                    teamLeadId: department.teamLeadId,
+                                }}
                                 viewerRole={viewerRole}
                             />
                         </div>
@@ -92,13 +121,13 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
                         <h2 className="text-lg font-bold">Members</h2>
                     </div>
 
-                    {department.users.length === 0 ? (
+                    {department.members.length === 0 ? (
                         <p className="px-6 py-16 text-center text-sm text-slate-500">
                             No one is assigned to this department yet.
                         </p>
                     ) : (
                         <ul className="divide-y divide-slate-100">
-                            {department.users.map((u) => (
+                            {department.members.map((u) => (
                                 <li
                                     key={u.id}
                                     className={`flex flex-wrap items-center gap-3 p-4 sm:px-6 ${u.deactivatedAt ? "opacity-70" : ""
@@ -106,9 +135,7 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
                                 >
                                     <Avatar id={u.id} name={u.name} />
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-semibold text-slate-800">
-                                            {u.name}
-                                        </p>
+                                        <p className="truncate text-sm font-semibold text-slate-800">{u.name}</p>
                                         <p className="truncate text-xs text-slate-500">{u.email}</p>
                                     </div>
                                     <div className="flex items-center gap-2">

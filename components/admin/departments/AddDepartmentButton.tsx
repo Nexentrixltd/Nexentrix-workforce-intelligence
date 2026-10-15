@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import AddDepartmentModal from "@/components/admin/departments/AddDepartmentModal";
-import { Role } from "@/types/rbac";
+import AddDepartmentModal, { type ArmOption } from "@/components/admin/departments/AddDepartmentModal";
+import type { Role } from "@/types/rbac";
 
-export function AddDepartmentButton({ viewerRole }: { viewerRole: Role }) {
+type Props = {
+  viewerRole: Role;
+  arms: ArmOption[];
+};
+
+export function AddDepartmentButton({ viewerRole, arms }: Props) {
   const [open, setOpen] = useState(false);
+  console.log(arms, viewerRole)
 
   return (
     <>
@@ -22,6 +28,7 @@ export function AddDepartmentButton({ viewerRole }: { viewerRole: Role }) {
         open={open}
         onClose={() => setOpen(false)}
         viewerRole={viewerRole}
+        arms={arms}
       />
     </>
   );

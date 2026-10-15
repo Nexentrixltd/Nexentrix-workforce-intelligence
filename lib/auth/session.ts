@@ -4,13 +4,22 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth/jwt";
 import { prisma } from "@/lib/prisma";
-import { hasPermission, roleRoutes, type Permission, type Role } from "@/types/rbac";
+import {
+  hasPermission,
+  roleRoutes,
+  type Permission,
+  type Role,
+} from "@/types/rbac";
 import { NextResponse } from "next/server";
 
 const TOUCH_INTERVAL_MS = 5 * 60 * 1000;
 
+export type SessionUser = NonNullable<
+  Awaited<ReturnType<typeof getSessionUser>>
+>;
+
 export type ApiAuthResult =
-  | { ok: true; user: NonNullable<Awaited<ReturnType<typeof getSessionUser>>> }
+  | { ok: true; user: SessionUser }
   | { ok: false; response: NextResponse };
 
 export const getSessionUser = cache(async () => {
@@ -29,6 +38,7 @@ export const getSessionUser = cache(async () => {
           name: true,
           email: true,
           role: true,
+          departmentId: true,
           deactivatedAt: true,
           isFirstLogin: true,
         },

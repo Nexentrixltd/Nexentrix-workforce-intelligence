@@ -13,8 +13,11 @@ export type UserOption = {
 };
 
 const ROLE_LABELS: Record<Role, string> = {
+    EXECUTIVE: "Executive",
     ADMIN: "Admin",
     HR: "HR",
+    CHIEF_OF_STAFF: "Chief of Staff",
+    ARM_HEAD: "Arm head",
     TEAM_LEAD: "Team Lead",
     STAFF: "Staff",
 };

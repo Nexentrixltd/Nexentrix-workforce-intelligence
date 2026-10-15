@@ -20,6 +20,7 @@ import ResetPasswordModal, { type ResetTarget } from "./ResetPasswordModal";
 import { canManageUser } from "@/lib/permissions";
 import { Role } from "@/types/rbac";
 import { useUserStore } from "@/store/userStore";
+import { ROLE_STYLES } from "@/lib/utils";
 
 export type StaffRow = {
   id: string;
@@ -29,13 +30,6 @@ export type StaffRow = {
   department: { id: string; name: string } | null;
   createdAt: string;
   deactivatedAt: string | null;
-};
-
-const ROLE_STYLES: Record<Role, { label: string; cls: string }> = {
-  ADMIN: { label: "Admin", cls: "bg-rose-50 text-rose-700" },
-  HR: { label: "HR", cls: "bg-violet-50 text-violet-700" },
-  TEAM_LEAD: { label: "Team Lead", cls: "bg-emerald-50 text-emerald-700" },
-  STAFF: { label: "Staff", cls: "bg-slate-100 text-slate-700" },
 };
 
 const AVATAR_COLORS = [

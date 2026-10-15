@@ -5,9 +5,12 @@ import { EmployeesTable } from "@/components/admin/employees/EmployeesTable";
 import { AddEmployeeButton } from "@/components/admin/employees/AddEmployeeButton";
 import { StatGrid } from "@/components/shared/statGrid";
 import { Error as ErrorState } from "@/components/shared/Error";
+import { Role, ROLES } from "@/types/rbac";
+import { canAssignRole } from "@/lib/permissions";
 
 export default async function HrEmployeesPage() {
     const hr = await requireRole(["HR"]);
+    const viewerRole = hr.role as Role;
 
     let data;
 
@@ -27,7 +30,11 @@ export default async function HrEmployeesPage() {
             }),
             prisma.department.findMany({
                 orderBy: { name: "asc" },
-                select: { id: true, name: true },
+                select: { id: true, name: true, teamLeadId: true, },
+            }),
+            prisma.arm.findMany({
+                select: { id: true, name: true, isShared: true, headId: true },
+                orderBy: [{ isShared: "desc" }, { name: "asc" }],
             }),
         ]);
     } catch (error) {
@@ -35,7 +42,22 @@ export default async function HrEmployeesPage() {
         return <ErrorState heading="Unable to load Employees" />;
     }
 
-    const [users, departments] = data;
+    const [users, departments, arms] = data;
+
+    const departmentOptions = departments.map((d) => ({
+        id: d.id,
+        name: d.name,
+        hasLead: !!d.teamLeadId,
+    }));
+
+    const armOptions = arms.map((a) => ({
+        id: a.id,
+        name: a.name,
+        isShared: a.isShared,
+        hasHead: !!a.headId,
+    }));
+
+    const allowedRoles = ROLES.filter((r) => canAssignRole(viewerRole, r));
 
     const stats = [
         {
@@ -89,8 +111,9 @@ export default async function HrEmployeesPage() {
 
                     <div className="w-full shrink-0 sm:w-auto [&>button]:w-full sm:[&>button]:w-auto">
                         <AddEmployeeButton
-                            departments={departments}
-                            allowedRoles={["STAFF", "TEAM_LEAD"]}
+                            departments={departmentOptions}
+                            arms={armOptions}
+                            allowedRoles={allowedRoles}
                         />
                     </div>
                 </div>

@@ -6,37 +6,76 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  ADMIN
+  EXECUTIVE
+  CHIEF_OF_STAFF
+  ARM_HEAD
+  HR
+  TEAM_LEAD
+  STAFF
+}
+
+enum DepartmentStatus {
+  ACTIVE
+  PLANNED
+}
+
 model User {
-  id           String  @id @default(cuid())
-  email        String @unique
-  name         String
-  passwordHash String
-  role         Role  @default(STAFF)
-  image        String?
-
-  departmentId String?
-  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          Role      @default(STAFF)
+  image         String?
   emailVerified DateTime?
   isFirstLogin  Boolean   @default(true)
   remember      Boolean   @default(false)
-
-  sessions Session[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lastLoginAt DateTime?
-  loginEvents LoginEvent[]
+  lastLoginAt   DateTime?
   deactivatedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  departmentId String?
+  department   Department? @relation("DepartmentMembers", fields: [departmentId], references: [id], onDelete: SetNull)
+
+  ledDepartments Department[] @relation("DepartmentLead")
+  headOfArm      Arm?         @relation("ArmHead")
+
+  sessions    Session[]
+  loginEvents LoginEvent[]
+
+  @@index([departmentId])
+  @@index([role, deactivatedAt])
+}
+
+model Arm {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  isShared    Boolean      @default(false)
+  headId      String?      @unique
+  head        User?        @relation("ArmHead", fields: [headId], references: [id], onDelete: SetNull)
+  departments Department[]
+  createdAt   DateTime     @default(now())
 }
 
 model Department {
-  id    String @id @default(cuid())
-  name  String
-  code  String @unique
-  users User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String           @id @default(cuid())
+  name       String           @unique
+  slug       String           @unique
+  focus      String?
+  status     DepartmentStatus @default(PLANNED)
+  armId      String
+  arm        Arm              @relation(fields: [armId], references: [id], onDelete: Restrict)
+  teamLeadId String?
+  teamLead   User?            @relation("DepartmentLead", fields: [teamLeadId], references: [id], onDelete: SetNull)
+  members    User[]           @relation("DepartmentMembers")
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([armId])
+  @@index([teamLeadId])
 }
 
 model Session {
@@ -52,13 +91,6 @@ model Session {
 
   @@index([userId, revokedAt])
   @@index([expiresAt])
-}
-
-enum Role {
-  ADMIN
-  HR
-  STAFF
-  TEAM_LEAD
 }
 
 model LoginEvent {
