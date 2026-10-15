@@ -39,7 +39,14 @@ export async function GET(_req: Request, { params }: Ctx) {
               id: true,
               name: true,
               role: true,
-              projectMembers: { select: { allocation: true } },
+              projectMembers: {
+                where: {
+                  project: {
+                    status: { in: ["PLANNING", "ACTIVE", "ON_HOLD"] },
+                  },
+                },
+                select: { allocation: true },
+              },
             },
           },
         },
@@ -130,7 +137,6 @@ export async function PATCH(req: Request, { params }: Ctx) {
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
-    
   const auth = await requireApiRole(PROJECT_ROLES);
   if (!auth.ok) return auth.response;
   const actor = {

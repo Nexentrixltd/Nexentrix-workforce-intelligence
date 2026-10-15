@@ -178,6 +178,13 @@ export const dashboardNav: DashboardNavSection[] = [
         roles: ROLES.ADMIN_ONLY,
       },
       {
+        label: "Arms",
+        href: "/hr/arms",
+        iconOutline: IconSitemap,
+        iconFilled: IconSitemapFilled,
+        roles: ROLES.HR_ONLY,
+      },
+      {
         label: "Employees",
         href: "/admin/employees",
         iconOutline: IconUsers,
@@ -197,6 +204,13 @@ export const dashboardNav: DashboardNavSection[] = [
         iconOutline: IconFolders,
         iconFilled: IconFolderFilled,
         roles: ROLES.ADMIN_ONLY,
+      },
+      {
+        label: "Projects",
+        href: "/hr/projects",
+        iconOutline: IconFolders,
+        iconFilled: IconFolderFilled,
+        roles: ROLES.HR_ONLY,
       },
       {
         label: "Employees",

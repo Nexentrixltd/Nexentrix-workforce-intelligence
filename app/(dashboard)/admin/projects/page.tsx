@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PROJECT_STATUSES } from "@/lib/validations/project";
 import { useUserStore } from "@/store/userStore";
 import { Role } from "@/types/rbac";
+import { ProjectsList } from "@/components/projects/ProjectList";
 
 type Row = {
     id: string;
@@ -102,56 +103,7 @@ export default function AdminProjectsPage() {
                 </select>
             </div>
 
-            <div className="overflow-x-auto rounded-md border mt-10">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                        <tr>
-                            <th className="px-4 py-3">Project</th>
-                            <th className="px-4 py-3">Department</th>
-                            <th className="px-4 py-3">Lead</th>
-                            <th className="px-4 py-3">Members</th>
-                            <th className="px-4 py-3">Status</th>
-                            <th className="px-4 py-3">End date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {isLoading && (
-                            <tr>
-                                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
-                                    Loading...
-                                </td>
-                            </tr>
-                        )}
-                        {!isLoading && data?.length === 0 && (
-                            <tr>
-                                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
-                                    No projects found
-                                </td>
-                            </tr>
-                        )}
-                        {data?.map((p) => (
-                            <tr key={p.id} className="border-t hover:bg-gray-50">
-                                <td className="px-4 py-3">
-                                    <Link
-                                        href={`/admin/projects/${p.id}`}
-                                        className="font-medium hover:underline"
-                                    >
-                                        {p.name}
-                                    </Link>
-                                    <div className="text-xs text-gray-500">{p.code}</div>
-                                </td>
-                                <td className="px-4 py-3">{p.department?.name ?? "-"}</td>
-                                <td className="px-4 py-3">{p.lead.name}</td>
-                                <td className="px-4 py-3">{p._count.members}</td>
-                                <td className="px-4 py-3">{p.status.replace("_", " ")}</td>
-                                <td className="px-4 py-3">
-                                    {p.endDate ? new Date(p.endDate).toLocaleDateString() : "-"}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <ProjectsList basePath="/admin/projects" canCreate />
         </div>
     );
 }

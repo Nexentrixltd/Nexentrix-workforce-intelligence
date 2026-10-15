@@ -26,7 +26,7 @@ export type HeadCandidate = {
     departmentName: string | null;
 };
 
-type Props = { arms: ArmCard[]; candidates: HeadCandidate[] };
+type Props = { arms: ArmCard[]; candidates: HeadCandidate[]; readOnly?: boolean };
 
 function initials(name: string) {
     return name
@@ -39,17 +39,17 @@ function initials(name: string) {
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-export function ArmsList({ arms, candidates }: Props) {
+export function ArmsList({ arms, candidates, readOnly = false }: Props) {
     const [editing, setEditing] = useState<ArmCard | null>(null);
-   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+    const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-const toggle = (id: string) =>
-  setExpanded((prev) => {
-    const next = new Set(prev);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    return next;
-  });
+    const toggle = (id: string) =>
+        setExpanded((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
 
     return (
         <>
@@ -60,7 +60,7 @@ const toggle = (id: string) =>
                         (n, d) => n + d.members,
                         0,
                     );
-                   const isCollapsed = !expanded.has(arm.id);
+                    const isCollapsed = !expanded.has(arm.id);
                     const panelId = `arm-${arm.id}-departments`;
 
                     return (
@@ -83,7 +83,7 @@ const toggle = (id: string) =>
                                     />
                                     <span className="min-w-0">
                                         <span className="flex flex-wrap items-center gap-2">
-                                            <span className="font-triakis text-xl tracking-tight text-slate-900">
+                                            <span className="text-xl tracking-tight text-slate-900">
                                                 {arm.name}
                                             </span>
                                             {arm.isShared && (
@@ -99,7 +99,6 @@ const toggle = (id: string) =>
                                     </span>
                                 </button>
 
-                                {/* Head */}
                                 <div className="flex items-center gap-3">
                                     {arm.head ? (
                                         <>
@@ -111,29 +110,34 @@ const toggle = (id: string) =>
                                                 <p className="truncate text-sm font-semibold text-slate-900">
                                                     {arm.head.name}
                                                 </p>
+                                                {readOnly && (
+                                                    <p className="truncate text-xs text-slate-500">{arm.head.email}</p>
+                                                )}
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditing(arm)}
-                                                className="ml-1 inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
-                                            >
-                                                <UserCog size={16} />
-                                                Change
-                                            </button>
+                                            {!readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditing(arm)}
+                                                    className="ml-1 inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
+                                                >
+                                                    <UserCog size={16} />
+                                                    Change
+                                                </button>
+                                            )}
                                         </>
                                     ) : (
                                         <>
-                                            <p className="text-sm text-amber-700">
-                                                No {title} yet
-                                            </p>
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditing(arm)}
-                                                className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30"
-                                            >
-                                                <UserPlus size={16} />
-                                                Assign {title}
-                                            </button>
+                                            <p className="text-sm text-amber-700">No {title} yet</p>
+                                            {!readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditing(arm)}
+                                                    className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30"
+                                                >
+                                                    <UserPlus size={16} />
+                                                    Assign {title}
+                                                </button>
+                                            )}
                                         </>
                                     )}
                                 </div>
@@ -146,7 +150,6 @@ const toggle = (id: string) =>
                                 </p>
                             )}
 
-                            {/* Departments */}
                             {!isCollapsed && (
                                 <div id={panelId} className="border-t border-slate-100">
                                     {arm.departments.length === 0 ? (
@@ -205,12 +208,14 @@ const toggle = (id: string) =>
                 })}
             </div>
 
-            <AssignHeadModal
-                key={editing?.id ?? "closed"}
-                arm={editing}
-                candidates={candidates}
-                onClose={() => setEditing(null)}
-            />
+            {!readOnly && (
+                <AssignHeadModal
+                    key={editing?.id ?? "closed"}
+                    arm={editing}
+                    candidates={candidates}
+                    onClose={() => setEditing(null)}
+                />
+            )}
         </>
     );
 }

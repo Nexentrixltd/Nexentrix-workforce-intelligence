@@ -2,7 +2,7 @@ import { Network, UserCheck, UserX, Building2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { Error as ErrorState } from "@/components/shared/Error";
-import { ArmsList } from "@/components/admin/arm/ArmsList";
+import { ArmsList } from "@/components/arm/ArmsList";
 
 export default async function AdminArmsPage() {
     await requireRole(["ADMIN"]);
