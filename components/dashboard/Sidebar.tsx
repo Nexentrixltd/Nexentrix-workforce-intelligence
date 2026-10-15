@@ -73,11 +73,17 @@ export default function DashboardSidebar() {
   };
 
   return (
-    <aside className="hidden fixed left-0 top-0 bottom-0 h-screen w-72 shrink-0 border-r border-border/60 bg-surface lg:flex lg:flex-col">
-      <div className="border-b border-border/60 px-6 py-5">
+    <aside className="hidden fixed left-0 top-0 bottom-0 h-screen w-72 shrink-0 border-r border-border/60 bg-sidebar lg:flex lg:flex-col">
+      <div className="px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center">
-            <img src="/assets/nexentrix.png" alt="logo" />
+            <img src="/assets/nexentrix.png" alt="Nexentrix" className="block h-full w-full object-contain dark:hidden" />
+
+            <img
+              src="/assets/logo-mark-white.svg"
+              alt="Nexentrix"
+              className="hidden h-full w-full object-contain dark:block"
+            />
           </div>
 
           <div className="min-w-0">

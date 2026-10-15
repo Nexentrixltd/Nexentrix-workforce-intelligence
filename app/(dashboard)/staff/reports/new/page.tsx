@@ -16,7 +16,7 @@ const page = () => {
         </p>
       </div>
 
-      <div className="p-6 mt-4">
+      <div className="mt-10">
         <SubmitReportForm/>
       </div>
     </div>

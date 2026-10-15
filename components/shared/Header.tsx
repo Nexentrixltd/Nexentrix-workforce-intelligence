@@ -14,9 +14,8 @@ const Header = () => {
   )}&background=random`;
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white/70 px-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/50 sm:px-6 md:relative md:ml-72">
+    <header className="fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between gap-3 border-b bg-sidebar sm:px-6 md:relative md:ml-72">
       {searchOpen ? (
-        // Mobile expanded search
         <div className="flex w-full items-center gap-2 sm:hidden">
           <div className="flex flex-1 items-center gap-2 rounded-lg border border-transparent bg-surface/50 px-3 py-2 transition focus-within:border-primary/30">
             <Search className="h-4 w-4 shrink-0 text-slate-400" />
@@ -46,7 +45,6 @@ const Header = () => {
           searchOpen ? "hidden sm:flex" : "flex"
         }`}
       >
-        {/* Search: input from sm up */}
         <div className="hidden w-44 items-center gap-2 rounded-lg border border-transparent bg-surface/50 px-3 py-2 transition focus-within:border-primary/30 sm:flex lg:w-64">
           <Search className="h-4 w-4 shrink-0 text-slate-400" />
           <input
@@ -57,7 +55,6 @@ const Header = () => {
           />
         </div>
 
-        {/* Search: icon on mobile */}
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
