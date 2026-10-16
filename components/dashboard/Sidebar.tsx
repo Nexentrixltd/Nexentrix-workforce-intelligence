@@ -8,12 +8,12 @@ import { useUserStore } from "@/store/userStore";
 import { cn, dashboardNav } from "@/lib/utils";
 import { Role } from "@/types/rbac";
 
-const formatRole = (role: Role) =>
-  role
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+// const formatRole = (role: Role) =>
+//   role
+//     .toLowerCase()
+//     .split("_")
+//     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+//     .join(" ");
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
@@ -24,10 +24,6 @@ export default function DashboardSidebar() {
   const isLoggingOut = useUserStore((state) => state.isLoggingOut);
 
   if (!user) return null;
-
-  const avatarUrl = user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    user?.name || "User",
-  )}&background=random`;
 
   const visibleSections = useMemo(() => {
     return dashboardNav
@@ -117,9 +113,9 @@ export default function DashboardSidebar() {
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "group flex items-center justify-between rounded px-3 py-3 text-sm transition-all duration-200",
+                        "group flex items-center justify-between rounded-l-sm px-3 py-3 text-sm transition-all duration-200",
                         active
-                          ? "bg-background text-text-primary"
+                          ? "bg-muted border-r-4 border-primary text-text-primary"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
@@ -154,7 +150,7 @@ export default function DashboardSidebar() {
       <div className="w-full flex flex-col items-start justify-between gap-4 p-4">
         <div className="flex gap-2 w-full">
           <img
-            src={avatarUrl}
+            src={user?.image || ""}
             alt={user.name || "User"}
             className="h-10 w-10 rounded object-cover border border-border/50"
           />

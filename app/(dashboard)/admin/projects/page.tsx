@@ -37,18 +37,18 @@ export default function AdminProjectsPage() {
         queryFn: async () => (await fetch("/api/projects/options")).json(),
     });
 
-    const { data, isLoading } = useQuery<Row[]>({
-        queryKey: ["admin-projects", q, status, departmentId],
-        queryFn: async () => {
-            const params = new URLSearchParams();
-            if (q) params.set("q", q);
-            if (status) params.set("status", status);
-            if (departmentId) params.set("departmentId", departmentId);
-            const res = await fetch(`/api/projects?${params}`);
-            if (!res.ok) throw new Error("Failed to load projects");
-            return res.json();
-        },
-    });
+    // const { data, isLoading } = useQuery<Row[]>({
+    //     queryKey: ["admin-projects", q, status, departmentId],
+    //     queryFn: async () => {
+    //         const params = new URLSearchParams();
+    //         if (q) params.set("q", q);
+    //         if (status) params.set("status", status);
+    //         if (departmentId) params.set("departmentId", departmentId);
+    //         const res = await fetch(`/api/projects?${params}`);
+    //         if (!res.ok) throw new Error("Failed to load projects");
+    //         return res.json();
+    //     },
+    // });
 
     return (
         <div className="space-y-4 p-6">
@@ -57,14 +57,14 @@ export default function AdminProjectsPage() {
                     <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
                         Projects
                     </h1>
-                    <p className="mt-2 text-sm text-secondary">
+                    <p className="mt-2 text-sm text-muted-foreground">
                         {user?.role ? SUBTITLES[user.role] : ""}
                     </p>
                 </div>
 
                 <Link
                     href="/admin/projects/new"
-                    className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white"
+                    className="rounded-md bg-primary px-4 py-2 text-sm font-medium"
                 >
                     New project
                 </Link>
@@ -75,12 +75,12 @@ export default function AdminProjectsPage() {
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder="Search name or code"
-                    className="rounded-md border px-3 py-2 text-sm"
+                    className="rounded-md bg-muted border px-3 py-2 text-sm"
                 />
                 <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="rounded-md border px-3 py-2 text-sm"
+                    className="rounded-md border bg-muted px-3 py-2 text-sm"
                 >
                     <option value="">All statuses</option>
                     {PROJECT_STATUSES.map((s) => (
@@ -92,7 +92,7 @@ export default function AdminProjectsPage() {
                 <select
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
-                    className="rounded-md border px-3 py-2 text-sm"
+                    className="rounded-md border px-3 bg-muted py-2 text-sm"
                 >
                     <option value="">All departments</option>
                     {options?.departments.map((d) => (

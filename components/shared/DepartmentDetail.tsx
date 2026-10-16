@@ -84,7 +84,7 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
 
                         <div className="mt-2 flex flex-col items-start gap-1">
                             {department.focus && <p className="text-base">{department.focus}</p>}
-                            <p className="text-sm text-secondary">
+                            <p className="text-sm text-muted-foreground">
                                 Team Lead:{" "}
                                 {department.teamLead ? (
                                     <span className="font-medium text-slate-800">{department.teamLead.name}</span>
@@ -92,7 +92,7 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
                                     <span className="italic text-slate-400">Unassigned</span>
                                 )}
                             </p>
-                            <p className="text-sm text-secondary">
+                            <p className="text-sm text-muted-foreground">
                                 {department.members.length}{" "}
                                 {department.members.length === 1 ? "member" : "members"} ({activeCount} active) ·
                                 Created {formatDate(department.createdAt.toISOString())}

@@ -35,7 +35,7 @@ const inputClass = (invalid?: boolean) =>
   `${inputBase} h-11 ${invalid ? "border-red-400" : "border-gray-200"}`;
 
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-900";
-const hintClass = "mt-1.5 text-xs text-secondary";
+const hintClass = "mt-1.5 text-xs text-muted-foreground";
 const errorClass = "mt-1.5 text-xs font-medium text-red-600";
 
 function Section({
@@ -51,7 +51,7 @@ function Section({
     <section className="border-t border-gray-200 py-8 first:border-t-0 first:pt-0">
       <div className="mb-6">
         <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-        <p className="mt-1 text-sm text-secondary">{description}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       <div className="space-y-5">{children}</div>
     </section>

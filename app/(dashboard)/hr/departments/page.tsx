@@ -97,7 +97,7 @@ export default async function HrDepartmentsPage() {
                         <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
                             Departments
                         </h1>
-                        <p className="mt-2 text-sm text-secondary">
+                        <p className="mt-2 text-sm text-muted-foreground">
                             Create departments and manage who sits in each one.
                         </p>
                     </div>

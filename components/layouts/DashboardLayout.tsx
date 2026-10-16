@@ -36,7 +36,7 @@ export default function DashboardClientLayout({
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Spinner className="h-10 w-10 text-primary" />
+          <Spinner className="h-10 w-10 text-muted-foreground" />
         </div>
       </div>
     );

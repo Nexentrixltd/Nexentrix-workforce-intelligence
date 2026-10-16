@@ -35,7 +35,7 @@ export default function NewProjectPage() {
         <div className="max-w-4xl px-4 py-8 sm:px-6">
             <Link
                 href="/admin/projects"
-                className="inline-flex items-center gap-1.5 text-sm text-secondary transition hover:text-primary"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-primary"
             >
                 <svg
                     width="16"
@@ -57,7 +57,7 @@ export default function NewProjectPage() {
                 <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
                     New project
                 </h1>
-                <p className="mt-2 text-sm text-secondary">
+                <p className="mt-2 text-sm text-muted-foreground">
                     Set up the project, pick a lead, then add members from its page.
                 </p>
             </div>

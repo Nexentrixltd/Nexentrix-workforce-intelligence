@@ -90,7 +90,7 @@ const iconBtn =
   "cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400";
 
 const selectCls =
-  "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 lg:w-40";
+  "w-full rounded-xl border border-border bg-muted px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 lg:w-40";
 
 type Props = {
   users: StaffRow[];
@@ -244,38 +244,38 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
 
   const emptyState = (
     <div className="px-6 py-16 text-center">
-      <Filter size={30} className="mx-auto mb-3 text-slate-300" />
+      <Filter size={30} className="mx-auto mb-3 text-muted-foreground" />
       <p className="font-semibold text-slate-700">No employees found</p>
-      <p className="mt-1 text-sm text-slate-500">Try a different search or filter.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Try a different search or filter.</p>
     </div>
   );
 
   return (
-    <section className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:p-5">
+    <section className="w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="flex flex-col justify-between gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:p-5">
         <div className="min-w-0">
           <h2 className="text-lg font-bold">All Employees</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Browse everyone, filter by role, department or status, and manage accounts.
           </p>
         </div>
-        <span className="w-fit shrink-0 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700">
+        <span className="w-fit shrink-0 rounded-lg bg-muted px-3 py-2 text-sm font-medium text-primary">
           {users.length} people
         </span>
       </div>
 
-      <div className="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row">
+      <div className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row">
         <div className="relative w-full lg:max-w-sm">
           <Search
             size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email or department..."
             aria-label="Search employees"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            className="w-full rounded-xl border border-border bg-muted py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
           />
         </div>
 
@@ -323,7 +323,7 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
         {filtered.length === 0 ? (
           emptyState
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-border">
             {filtered.map((u) => (
               <li key={u.id} className={`p-4 ${u.deactivatedAt ? "opacity-70" : ""}`}>
                 <div className="flex items-start gap-3">
@@ -334,12 +334,12 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-slate-800">
+                      <p className="truncate text-sm font-semibold text-primary">
                         {u.id === user?.id ? "You" : u.name}
                       </p>
                       <RoleBadge role={u.role} />
                     </div>
-                    <p className="truncate text-xs text-slate-500">{u.email}</p>
+                    <p className="truncate text-xs text-muted-foreground">{u.email}</p>
                     {u.deactivatedAt && (
                       <div className="mt-1">
                         <InactiveBadge />
@@ -351,7 +351,7 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <DepartmentBadge department={u.department} />
-                    <span className="shrink-0 text-xs text-slate-500">
+                    <span className="shrink-0 text-xs text-muted-foreground">
                       {formatDate(u.createdAt)}
                     </span>
                   </div>
@@ -365,8 +365,8 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left">
-          <thead className="bg-slate-50">
-            <tr className="text-xs uppercase tracking-wider text-slate-500">
+          <thead className="bg-muted">
+            <tr className="text-xs uppercase tracking-wider text-muted-foreground">
               <th className="px-6 py-4">Name</th>
               <th className="px-6 py-4">Role</th>
               <th className="px-6 py-4">Department</th>
@@ -374,11 +374,11 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border">
             {filtered.map((u) => (
               <tr
                 key={u.id}
-                className={`transition hover:bg-slate-50/70 ${u.deactivatedAt ? "opacity-70" : ""
+                className={`transition hover:bg-muted ${u.deactivatedAt ? "opacity-70" : ""
                   }`}
               >
                 <td className="px-6 py-4">
@@ -390,12 +390,12 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-semibold text-slate-800">
+                        <p className="truncate text-sm font-semibold text-text-primary">
                           {u.id === user?.id ? "You" : u.name}
                         </p>
                         {u.deactivatedAt && <InactiveBadge />}
                       </div>
-                      <p className="truncate text-xs text-slate-500">{u.email}</p>
+                      <p className="truncate text-xs text-muted-foreground">{u.email}</p>
                     </div>
                   </div>
                 </td>
@@ -405,7 +405,7 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
                 <td className="px-6 py-4">
                   <DepartmentBadge department={u.department} />
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-500">
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-muted-foreground">
                   {formatDate(u.createdAt)}
                 </td>
                 <td className="px-6 py-4">{renderActions(u)}</td>
@@ -420,7 +420,7 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
         </table>
       </div>
 
-      <div className="border-t border-slate-100 px-4 py-4 text-sm text-slate-500 sm:px-5">
+      <div className="border-t border-border bg-muted px-4 py-4 text-sm text-muted-foreground sm:px-5">
         Showing {filtered.length} of {users.length} people
       </div>
 

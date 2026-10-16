@@ -75,6 +75,8 @@ export const useUserStore = create<ExtendedUserStore>((set, get) => ({
       }
       const me = await api.get("/auth/me");
 
+      console.log(me)
+
       set({
         user: me.data.user,
         hasFetchedUser: true,
@@ -98,7 +100,6 @@ export const useUserStore = create<ExtendedUserStore>((set, get) => ({
 
     try {
       await api.post("/auth/logout");
-      // Reset state entirely on successful logout
       set({ ...initialState, hasFetchedUser: true });
     } catch (err: any) {
       set({ error: getErrorMessage(err) });

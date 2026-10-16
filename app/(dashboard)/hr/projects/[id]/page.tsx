@@ -60,7 +60,7 @@ export default function HrProjectDetailPage() {
     if (!project)
         return (
             <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-                <p className="text-sm text-secondary">This project doesn&apos;t exist.</p>
+                <p className="text-sm text-muted-foreground">This project doesn&apos;t exist.</p>
                 <Link
                     href="/hr/projects"
                     className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
@@ -79,7 +79,7 @@ export default function HrProjectDetailPage() {
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
             <Link
                 href="/hr/projects"
-                className="inline-flex items-center gap-1.5 text-sm text-secondary transition hover:text-primary"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-primary"
             >
                 <svg
                     width="16"
@@ -109,7 +109,7 @@ export default function HrProjectDetailPage() {
                         {status.label}
                     </span>
                 </div>
-                <p className="mt-2 text-sm text-secondary">{project.code}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{project.code}</p>
             </div>
 
             <dl className="grid divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white sm:grid-cols-4 sm:divide-x sm:divide-y-0">
@@ -120,7 +120,7 @@ export default function HrProjectDetailPage() {
                     ["Ends", fmtDate(project.endDate)],
                 ].map(([k, v]) => (
                     <div key={k} className="px-5 py-4">
-                        <dt className="text-sm text-secondary">{k}</dt>
+                        <dt className="text-sm text-muted-foreground">{k}</dt>
                         <dd className="mt-1 font-medium text-gray-900">{v}</dd>
                     </div>
                 ))}
@@ -137,7 +137,7 @@ export default function HrProjectDetailPage() {
                     <h2 className="text-lg font-semibold text-gray-900">
                         Team ({project.members.length})
                     </h2>
-                    <p className="text-sm text-secondary">
+                    <p className="text-sm text-muted-foreground">
                         {daysLabel(projectDays)} a week in total on this project
                     </p>
                 </div>
@@ -145,7 +145,7 @@ export default function HrProjectDetailPage() {
                 <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
                     <table className="w-full min-w-160 text-left text-sm">
                         <thead>
-                            <tr className="border-b border-gray-200 text-xs text-secondary">
+                            <tr className="border-b border-gray-200 text-xs text-muted-foreground">
                                 <th className="px-5 py-3 font-medium">Person</th>
                                 <th className="px-5 py-3 font-medium">Role on project</th>
                                 <th className="px-5 py-3 font-medium">Time on project</th>
@@ -173,7 +173,7 @@ export default function HrProjectDetailPage() {
                                                             </span>
                                                         )}
                                                     </p>
-                                                    <p className="text-xs text-secondary">
+                                                    <p className="text-xs text-muted-foreground">
                                                         {m.role.replace("_", " ").toLowerCase()}
                                                     </p>
                                                 </div>
@@ -210,7 +210,7 @@ export default function HrProjectDetailPage() {
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <span className="text-secondary">-</span>
+                                                <span className="text-muted-foreground">-</span>
                                             )}
                                         </td>
                                     </tr>

@@ -105,7 +105,7 @@ export default async function AdminArmsPage() {
             <div className="mx-auto w-full space-y-7 md:max-w-7xl">
                 <div>
                     <h1 className="font-triakis text-4xl tracking-tight">Arms</h1>
-                    <p className="mt-2 text-sm text-secondary">
+                    <p className="mt-2 text-sm text-muted-foreground">
                         Assign the Arm Heads and the Chief of Staff who review each arm&apos;s departments.
                     </p>
                 </div>

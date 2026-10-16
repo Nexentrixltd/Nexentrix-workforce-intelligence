@@ -38,6 +38,7 @@ export const getSessionUser = cache(async () => {
           name: true,
           email: true,
           role: true,
+          image: true,
           departmentId: true,
           deactivatedAt: true,
           isFirstLogin: true,
@@ -55,6 +56,9 @@ export const getSessionUser = cache(async () => {
   ) {
     return null;
   }
+  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    session?.user?.name ?? "User",
+  )}&background=random`;
 
   if (Date.now() - session.lastSeenAt.getTime() > TOUCH_INTERVAL_MS) {
     prisma.session
@@ -62,7 +66,11 @@ export const getSessionUser = cache(async () => {
       .catch(() => {});
   }
 
-  return { ...session.user, sessionId: session.id };
+  return {
+    ...session.user,
+    image: session.user.image || avatarUrl,
+    sessionId: session.id,
+  };
 });
 
 export async function requireRole(allowed: Role[]) {

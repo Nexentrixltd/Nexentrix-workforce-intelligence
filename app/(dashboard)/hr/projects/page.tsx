@@ -18,7 +18,7 @@ export default function HrProjectsPage() {
                 <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
                     Projects
                 </h1>
-                <p className="mt-2 text-sm text-secondary">
+                <p className="mt-2 text-sm text-muted-foreground">
                     Review all projects and see how people are allocated across them.
                 </p>
             </div>
@@ -32,7 +32,7 @@ export default function HrProjectsPage() {
                         onClick={() => setTab(t.key)}
                         className={`-mb-px border-b-2 pb-3 text-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 ${tab === t.key
                                 ? "border-primary font-semibold text-primary"
-                                : "border-transparent text-secondary hover:text-gray-900"
+                                : "border-transparent text-muted-foreground hover:text-gray-900"
                             }`}
                     >
                         {t.label}

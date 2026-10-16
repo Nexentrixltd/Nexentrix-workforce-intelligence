@@ -57,9 +57,9 @@ function StatusBadge({ status }: { status: DepartmentRow["status"] }) {
 
 function LeadLabel({ lead }: { lead: DepartmentRow["teamLead"] }) {
     return lead ? (
-        <span className="text-sm text-slate-700">{lead.name}</span>
+        <span className="text-sm text-text-primary font-semibold">{lead.name}</span>
     ) : (
-        <span className="text-sm italic text-slate-400">Unassigned</span>
+        <span className="text-sm italic text-muted-foreground">Unassigned</span>
     );
 }
 
@@ -162,40 +162,40 @@ export function DepartmentsTable({
 
     const emptyState = (
         <div className="px-6 py-16 text-center">
-            <Filter size={30} className="mx-auto mb-3 text-slate-300" />
-            <p className="font-semibold text-slate-700">No departments found</p>
-            <p className="mt-1 text-sm text-slate-500">
+            <Filter size={30} className="mx-auto mb-3 text-muted-foreground" />
+            <p className="font-semibold text-muted-foreground">No departments found</p>
+            <p className="mt-1 text-sm text-muted-foreground">
                 Try a different search or arm filter.
             </p>
         </div>
     );
 
     return (
-        <section className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:p-5">
+        <section className="w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="flex flex-col justify-between gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:p-5">
                 <div className="min-w-0">
                     <h2 className="text-lg font-bold">All Departments</h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-muted-foreground">
                         Browse departments by arm, Team Lead and rollout status.
                     </p>
                 </div>
-                <span className="w-fit shrink-0 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700">
+                <span className="w-fit shrink-0 rounded-lg bg-muted px-3 py-2 text-sm font-medium text-primary">
                     {departments.length} departments
                 </span>
             </div>
 
-            <div className="flex flex-col gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center">
+            <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center">
                 <div className="relative w-full md:max-w-md">
                     <Search
                         size={18}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                     />
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search by department, arm or Team Lead..."
                         aria-label="Search departments"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                        className="w-full rounded-xl border border-border bg-muted py-2.5 pl-10 pr-4 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                     />
                 </div>
 
@@ -203,7 +203,7 @@ export function DepartmentsTable({
                     value={armFilter}
                     onChange={(e) => setArmFilter(e.target.value)}
                     aria-label="Filter by arm"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 md:w-auto"
+                    className="w-full rounded-xl border border-border bg-muted px-3 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 md:w-auto"
                 >
                     <option value="ALL">All arms</option>
                     {arms.map((a) => (
@@ -218,7 +218,7 @@ export function DepartmentsTable({
                 {filtered.length === 0 ? (
                     emptyState
                 ) : (
-                    <ul className="divide-y divide-slate-100">
+                    <ul className="divide-y divide-border">
                         {filtered.map((d) => (
                             <li key={d.id} className="p-4">
                                 <div className="flex items-start gap-3">
@@ -228,8 +228,8 @@ export function DepartmentsTable({
                                         {d.name.slice(0, 2).toUpperCase()}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-semibold text-slate-800">{d.name}</p>
-                                        <p className="mt-0.5 truncate text-xs text-slate-500">{d.armName}</p>
+                                        <p className="truncate text-sm font-semibold text-text-primary">{d.name}</p>
+                                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{d.armName}</p>
                                         <div className="mt-1.5 flex items-center gap-2">
                                             <StatusBadge status={d.status} />
                                             <LeadLabel lead={d.teamLead} />
@@ -238,8 +238,8 @@ export function DepartmentsTable({
                                 </div>
 
                                 <div className="mt-3 flex items-center justify-between gap-2">
-                                    <span className="flex items-center gap-1.5 text-sm text-slate-500">
-                                        <Users size={15} className="text-slate-400" />
+                                    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                        <Users size={15} className="text-muted-foreground" />
                                         {d.members}
                                     </span>
                                     {renderActions(d)}
@@ -252,8 +252,8 @@ export function DepartmentsTable({
 
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-left">
-                    <thead className="bg-slate-50">
-                        <tr className="text-xs uppercase tracking-wider text-slate-500">
+                    <thead className="bg-card">
+                        <tr className="text-xs uppercase tracking-wider text-muted-foreground bg-muted">
                             <th className="px-6 py-4">Department</th>
                             <th className="px-6 py-4">Arm</th>
                             <th className="px-6 py-4">Team Lead</th>
@@ -262,9 +262,9 @@ export function DepartmentsTable({
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border">
                         {filtered.map((d) => (
-                            <tr key={d.id} className="transition hover:bg-slate-50/70">
+                            <tr key={d.id} className="transition hover:bg-muted">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
                                         <div
@@ -273,14 +273,14 @@ export function DepartmentsTable({
                                             {d.name.slice(0, 2).toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-slate-800">{d.name}</p>
+                                            <p className="text-sm font-semibold text-text-primary">{d.name}</p>
                                             {d.focus && (
-                                                <p className="max-w-xs truncate text-xs text-slate-500">{d.focus}</p>
+                                                <p className="max-w-xs truncate text-xs text-muted-foreground">{d.focus}</p>
                                             )}
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-slate-600">{d.armName}</td>
+                                <td className="px-6 py-4 text-sm text-muted-foreground">{d.armName}</td>
                                 <td className="px-6 py-4">
                                     <LeadLabel lead={d.teamLead} />
                                 </td>
@@ -288,9 +288,9 @@ export function DepartmentsTable({
                                     <StatusBadge status={d.status} />
                                 </td> */}
                                 <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                                        <Users size={16} className="text-slate-400" />
-                                        {d.members}
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Users size={16} className="text-muted-foreground" />
+                                        <span className={`${d.members > 0 ? "text-text-primary font-semibold" : "text-muted-foreground"}`}>{d.members}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">{renderActions(d)}</td>
@@ -305,8 +305,8 @@ export function DepartmentsTable({
                 </table>
             </div>
 
-            <div className="border-t border-slate-100 px-4 py-4 text-sm text-slate-500 sm:px-5">
-                Showing <span className="font-bold">{filtered.length}</span> of {departments.length} departments
+            <div className="border-t border-border bg-muted px-4 py-4 text-sm text-muted-foreground sm:px-5">
+                Showing <span className="font-bold text-text-primary">{filtered.length}</span> of {departments.length} departments
             </div>
 
             <ConfirmDeleteDepartmentModal department={toDelete} onClose={() => setToDelete(null)} />

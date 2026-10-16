@@ -51,52 +51,10 @@ export function ProjectsList({ basePath, canCreate = false }: Props) {
 
     return (
         <div>
-            <div className="flex flex-wrap items-center gap-2">
-                <input
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="Search by name or code"
-                    className={`${control} w-full sm:w-72`}
-                />
-                <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className={control}
-                >
-                    <option value="">All statuses</option>
-                    {PROJECT_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                            {STATUS[s].label}
-                        </option>
-                    ))}
-                </select>
-                <select
-                    value={departmentId}
-                    onChange={(e) => setDepartmentId(e.target.value)}
-                    className={control}
-                >
-                    <option value="">All departments</option>
-                    {options?.departments.map((d) => (
-                        <option key={d.id} value={d.id}>
-                            {d.name}
-                        </option>
-                    ))}
-                </select>
-
-                {canCreate && (
-                    <Link
-                        href={`${basePath}/new`}
-                        className="ml-auto inline-flex h-11 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30"
-                    >
-                        New project
-                    </Link>
-                )}
-            </div>
-
-            <div className="mt-5 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <div className="mt-5 overflow-x-auto rounded-xl border border-border bg-card">
                 <table className="w-full min-w-190 text-left text-sm">
                     <thead>
-                        <tr className="border-b border-gray-200 text-xs text-secondary">
+                        <tr className="border-b border-border bg-muted text-xs text-muted-foreground">
                             <th className="px-5 py-3 font-medium">Project</th>
                             <th className="px-5 py-3 font-medium">Department</th>
                             <th className="px-5 py-3 font-medium">Lead</th>
@@ -105,19 +63,19 @@ export function ProjectsList({ basePath, canCreate = false }: Props) {
                             <th className="px-5 py-3 font-medium">Ends</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-border">
                         {isLoading &&
                             Array.from({ length: 5 }).map((_, i) => (
                                 <tr key={i}>
                                     <td colSpan={6} className="px-5 py-4">
-                                        <div className="h-5 animate-pulse rounded bg-gray-100" />
+                                        <div className="h-5 animate-pulse rounded bg-border" />
                                     </td>
                                 </tr>
                             ))}
 
                         {isError && (
                             <tr>
-                                <td colSpan={6} className="px-5 py-10 text-center text-secondary">
+                                <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">
                                     Projects could not be loaded. Refresh the page to try again.
                                 </td>
                             </tr>
@@ -126,10 +84,10 @@ export function ProjectsList({ basePath, canCreate = false }: Props) {
                         {!isLoading && !isError && data?.length === 0 && (
                             <tr>
                                 <td colSpan={6} className="px-5 py-12 text-center">
-                                    <p className="font-medium text-gray-900">
+                                    <p className="font-medium text-muted-foreground">
                                         {filtered ? "No projects match your filters" : "No projects yet"}
                                     </p>
-                                    <p className="mt-1 text-sm text-secondary">
+                                    <p className="mt-1 text-sm text-muted-foreground">
                                         {filtered
                                             ? "Try a different search or clear a filter."
                                             : canCreate
@@ -143,21 +101,21 @@ export function ProjectsList({ basePath, canCreate = false }: Props) {
                         {data?.map((p) => {
                             const s = STATUS[p.status] ?? STATUS.PLANNING;
                             return (
-                                <tr key={p.id} className="transition hover:bg-gray-50">
+                                <tr key={p.id} className="transition hover:bg-muted">
                                     <td className="px-5 py-4">
                                         <Link
                                             href={`${basePath}/${p.id}`}
-                                            className="font-medium text-gray-900 hover:text-primary"
+                                            className="font-medium text-text-primary hover:text-primary"
                                         >
                                             {p.name}
                                         </Link>
-                                        <p className="text-xs text-secondary">{p.code}</p>
+                                        <p className="text-xs text-muted-foreground">{p.code}</p>
                                     </td>
-                                    <td className="px-5 py-4 text-gray-700">
+                                    <td className="px-5 py-4 text-muted-foreground">
                                         {p.department?.name ?? "None"}
                                     </td>
-                                    <td className="px-5 py-4 text-gray-700">{p.lead.name}</td>
-                                    <td className="px-5 py-4 tabular-nums text-gray-700">
+                                    <td className="px-5 py-4 text-muted-foreground">{p.lead.name}</td>
+                                    <td className="px-5 py-4 tabular-nums text-muted-foreground">
                                         {p._count.members}
                                     </td>
                                     <td className="px-5 py-4">
@@ -168,7 +126,7 @@ export function ProjectsList({ basePath, canCreate = false }: Props) {
                                             {s.label}
                                         </span>
                                     </td>
-                                    <td className="px-5 py-4 text-gray-700">{fmtDate(p.endDate)}</td>
+                                    <td className="px-5 py-4 text-muted-foreground">{fmtDate(p.endDate)}</td>
                                 </tr>
                             );
                         })}

@@ -50,7 +50,7 @@ export function WorkloadTable({ projectsBasePath }: { projectsBasePath: string }
 
     return (
         <div>
-            <p className="max-w-2xl text-sm text-secondary">
+            <p className="max-w-2xl text-sm text-muted-foreground">
                 Each person has {WEEK_DAYS} working days a week. The bar shows how many
                 of those are booked across projects that are planned, active or on hold.
             </p>
@@ -64,36 +64,36 @@ export function WorkloadTable({ projectsBasePath }: { projectsBasePath: string }
                         aria-pressed={filter === c.key}
                         className={`h-9 rounded-full border px-4 text-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 ${filter === c.key
                                 ? "border-primary bg-primary/5 font-medium text-primary"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                                : "border-border bg-card text-gray-700 hover:border-gray-300"
                             }`}
                     >
-                        {c.label} <span className="tabular-nums text-secondary">{c.count}</span>
+                        {c.label} <span className="tabular-nums text-muted-foreground">{c.count}</span>
                     </button>
                 ))}
             </div>
 
-            <div className="mt-5 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <div className="mt-5 overflow-x-auto rounded-xl border border-border bg-background">
                 <table className="w-full min-w-180 text-left text-sm">
                     <thead>
-                        <tr className="border-b border-gray-200 text-xs text-secondary">
+                        <tr className="border-b border-border text-xs text-muted-foreground">
                             <th className="px-5 py-3 font-medium">Person</th>
                             <th className="px-5 py-3 font-medium">Projects</th>
                             <th className="px-5 py-3 font-medium">Days booked</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-border">
                         {isLoading &&
                             Array.from({ length: 5 }).map((_, i) => (
                                 <tr key={i}>
                                     <td colSpan={3} className="px-5 py-4">
-                                        <div className="h-5 animate-pulse rounded bg-gray-100" />
+                                        <div className="h-5 animate-pulse rounded bg-muted" />
                                     </td>
                                 </tr>
                             ))}
 
                         {isError && (
                             <tr>
-                                <td colSpan={3} className="px-5 py-10 text-center text-secondary">
+                                <td colSpan={3} className="px-5 py-10 text-center text-muted-foreground">
                                     Workload could not be loaded. Refresh the page to try again.
                                 </td>
                             </tr>
@@ -101,7 +101,7 @@ export function WorkloadTable({ projectsBasePath }: { projectsBasePath: string }
 
                         {!isLoading && !isError && shown.length === 0 && (
                             <tr>
-                                <td colSpan={3} className="px-5 py-10 text-center text-secondary">
+                                <td colSpan={3} className="px-5 py-10 text-center text-muted-foreground">
                                     {filter === "over"
                                         ? "Nobody is overbooked right now."
                                         : "No one matches this filter."}
@@ -119,10 +119,10 @@ export function WorkloadTable({ projectsBasePath }: { projectsBasePath: string }
                                                 {initials(r.name)}
                                             </span>
                                             <div className="min-w-0">
-                                                <p className="truncate font-medium text-gray-900">
+                                                <p className="truncate font-medium text-text-primary">
                                                     {r.name}
                                                 </p>
-                                                <p className="truncate text-xs text-secondary">
+                                                <p className="truncate text-xs text-muted-foreground">
                                                     {r.department ?? "No department"}
                                                 </p>
                                             </div>
@@ -131,14 +131,14 @@ export function WorkloadTable({ projectsBasePath }: { projectsBasePath: string }
 
                                     <td className="px-5 py-4">
                                         {r.projects.length === 0 ? (
-                                            <span className="text-secondary">Not on any project</span>
+                                            <span className="text-muted-foreground">Not on any project</span>
                                         ) : (
                                             <div className="flex flex-wrap gap-1.5">
                                                 {r.projects.slice(0, 3).map((p) => (
                                                     <Link
                                                         key={p.id}
                                                         href={`${projectsBasePath}/${p.id}`}
-                                                        className="max-w-56 truncate rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700 transition hover:bg-primary/10 hover:text-primary"
+                                                        className="max-w-56 truncate rounded-full bg-muted px-2.5 py-1 text-xs text-gray-700 transition hover:bg-primary/10 hover:text-primary"
                                                     >
                                                         {p.name}
                                                         {p.allocation != null &&
@@ -146,7 +146,7 @@ export function WorkloadTable({ projectsBasePath }: { projectsBasePath: string }
                                                     </Link>
                                                 ))}
                                                 {r.projects.length > 3 && (
-                                                    <span className="px-1 py-1 text-xs text-secondary">
+                                                    <span className="px-1 py-1 text-xs text-muted-foreground">
                                                         +{r.projects.length - 3} more
                                                     </span>
                                                 )}

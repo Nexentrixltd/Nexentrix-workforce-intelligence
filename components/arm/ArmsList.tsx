@@ -66,7 +66,7 @@ export function ArmsList({ arms, candidates, readOnly = false }: Props) {
                     return (
                         <section
                             key={arm.id}
-                            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                            className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm mt-10"
                         >
                             <header className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
                                 <button
@@ -78,21 +78,21 @@ export function ArmsList({ arms, candidates, readOnly = false }: Props) {
                                 >
                                     <ChevronDown
                                         size={18}
-                                        className={`shrink-0 text-slate-400 transition-transform group-hover:text-slate-600 ${isCollapsed ? "-rotate-90" : ""
+                                        className={`shrink-0 text-muted-foreground transition-transform group-hover:text-slate-600 ${isCollapsed ? "-rotate-90" : ""
                                             }`}
                                     />
                                     <span className="min-w-0">
                                         <span className="flex flex-wrap items-center gap-2">
-                                            <span className="text-xl tracking-tight text-slate-900">
+                                            <span className="text-xl tracking-tight text-text-primary">
                                                 {arm.name}
                                             </span>
                                             {arm.isShared && (
-                                                <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+                                                <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-primary">
                                                     Shared services
                                                 </span>
                                             )}
                                         </span>
-                                        <span className="mt-0.5 block text-sm text-slate-500">
+                                        <span className="mt-0.5 block text-sm text-muted-foreground">
                                             {plural(arm.departments.length, "department")},{" "}
                                             {plural(memberTotal, "member")}
                                         </span>
@@ -106,19 +106,19 @@ export function ArmsList({ arms, candidates, readOnly = false }: Props) {
                                                 {initials(arm.head.name)}
                                             </span>
                                             <div className="min-w-0">
-                                                <p className="text-xs text-slate-500">{title}</p>
-                                                <p className="truncate text-sm font-semibold text-slate-900">
+                                                <p className="text-xs text-muted-foreground">{title}</p>
+                                                <p className="truncate text-sm font-semibold text-text-primary">
                                                     {arm.head.name}
                                                 </p>
                                                 {readOnly && (
-                                                    <p className="truncate text-xs text-slate-500">{arm.head.email}</p>
+                                                    <p className="truncate text-xs text-muted-foreground">{arm.head.email}</p>
                                                 )}
                                             </div>
                                             {!readOnly && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setEditing(arm)}
-                                                    className="ml-1 inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
+                                                    className="ml-1 inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted px-3 text-sm font-medium text-text-primary transition hover:border-border hover:bg-muted-foreground/50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15"
                                                 >
                                                     <UserCog size={16} />
                                                     Change
@@ -127,7 +127,7 @@ export function ArmsList({ arms, candidates, readOnly = false }: Props) {
                                         </>
                                     ) : (
                                         <>
-                                            <p className="text-sm text-amber-700">No {title} yet</p>
+                                            <p className="text-sm text-">No {title} yet</p>
                                             {!readOnly && (
                                                 <button
                                                     type="button"
@@ -144,37 +144,37 @@ export function ArmsList({ arms, candidates, readOnly = false }: Props) {
                             </header>
 
                             {!arm.head && !isCollapsed && (
-                                <p className="border-t border-amber-100 bg-amber-50 px-6 py-2.5 text-sm text-amber-800">
+                                <p className="bg-status-warning-bg px-6 py-2.5 text-sm text-status-warning-text">
                                     Reports for this arm have no reviewer until a {title} is
                                     assigned.
                                 </p>
                             )}
 
                             {!isCollapsed && (
-                                <div id={panelId} className="border-t border-slate-100">
+                                <div id={panelId} className="border-t border-border">
                                     {arm.departments.length === 0 ? (
-                                        <p className="px-6 py-6 text-sm text-slate-500">
+                                        <p className="px-6 py-6 text-sm text-muted-foreground">
                                             No departments in this arm yet.
                                         </p>
                                     ) : (
                                         <>
-                                            <div className="hidden grid-cols-[1.4fr_1.2fr_90px] gap-4 px-6 py-2.5 text-xs font-medium text-slate-500 sm:grid">
+                                            <div className="hidden grid-cols-[1.4fr_1.2fr_90px] bg-muted gap-4 px-6 py-2.5 text-xs font-medium text-muted-foreground sm:grid">
                                                 <span>Department</span>
                                                 <span>Team lead</span>
                                                 <span className="text-right">Members</span>
                                             </div>
-                                            <ul className="divide-y divide-slate-100">
+                                            <ul className="divide-y divide-border">
                                                 {arm.departments.map((d) => (
                                                     <li
                                                         key={d.id}
                                                         className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-6 py-3.5 sm:grid-cols-[1.4fr_1.2fr_90px]"
                                                     >
                                                         <div className="flex min-w-0 items-center gap-2">
-                                                            <p className="truncate text-sm font-medium text-slate-900">
+                                                            <p className="truncate text-sm font-medium text-text-primary">
                                                                 {d.name}
                                                             </p>
                                                             {d.status === "PLANNED" && (
-                                                                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                                                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-primary">
                                                                     Planned
                                                                 </span>
                                                             )}
@@ -182,18 +182,18 @@ export function ArmsList({ arms, candidates, readOnly = false }: Props) {
 
                                                         <p className="order-3 col-span-2 truncate text-sm sm:order-0 sm:col-span-1">
                                                             {d.leadName ? (
-                                                                <span className="text-slate-700">
+                                                                <span className="text-text-primary font-semibold">
                                                                     {d.leadName}
                                                                 </span>
                                                             ) : (
-                                                                <span className="inline-flex items-center gap-1.5 text-amber-700">
-                                                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                                                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                                                    <span className="h-1.5 w-1.5 rounded-full bg-status-warning-bg" />
                                                                     No team lead
                                                                 </span>
                                                             )}
                                                         </p>
 
-                                                        <p className="text-right text-sm tabular-nums text-slate-600">
+                                                        <p className={`text-right text-sm tabular-nums ${d.members > 0 ? "text-text-primary font-semibold" : "text-muted-foreground"}`}>
                                                             {d.members}
                                                         </p>
                                                     </li>

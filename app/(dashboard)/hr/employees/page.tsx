@@ -104,7 +104,7 @@ export default async function HrEmployeesPage() {
                         <h1 className="font-triakis text-3xl tracking-tight sm:text-4xl">
                             Employees
                         </h1>
-                        <p className="mt-2 text-sm text-secondary">
+                        <p className="mt-2 text-sm text-muted-foreground">
                             Manage staff and team lead accounts, departments and status.
                         </p>
                     </div>

@@ -9,10 +9,6 @@ const Header = () => {
   const user = useUserStore((state) => state.user);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    user?.name ?? "User"
-  )}&background=random`;
-
   return (
     <header className="fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between gap-3 border-b bg-sidebar sm:px-6 md:relative md:ml-72">
       {searchOpen ? (
@@ -76,7 +72,7 @@ const Header = () => {
         <ThemeToggle />
 
         <img
-          src={avatarUrl}
+          src={user?.image || ""}
           alt={user?.name || "User"}
           className="h-9 w-9 shrink-0 hidden md:flex rounded border border-border/50 object-cover sm:h-10 sm:w-10"
         />
