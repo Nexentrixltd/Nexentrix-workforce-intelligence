@@ -3,10 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { EmployeesTable } from "@/components/admin/employees/EmployeesTable";
 import { AddEmployeeButton } from "@/components/admin/employees/AddEmployeeButton";
-import { StatGrid } from "@/components/shared/statGrid";
 import { Error as ErrorState } from "@/components/shared/Error";
 import { Role, ROLES } from "@/types/rbac";
 import { canAssignRole } from "@/lib/permissions";
+import StatCard from "@/components/shared/StatCard";
 
 export default async function HrEmployeesPage() {
     const hr = await requireRole(["HR"]);
@@ -118,7 +118,11 @@ export default async function HrEmployeesPage() {
                     </div>
                 </div>
 
-                <StatGrid stats={stats} />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {stats.map((stat, i) => (
+                        <StatCard stat={stat} key={i} />
+                    ))}
+                </div>
 
                 <EmployeesTable
                     users={rows}

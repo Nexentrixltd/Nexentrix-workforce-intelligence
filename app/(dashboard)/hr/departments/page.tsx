@@ -5,7 +5,7 @@ import { DepartmentsTable } from "@/components/admin/departments/DepartmentsTabl
 import { AddDepartmentButton } from "@/components/admin/departments/AddDepartmentButton";
 import { hasPermission, Role } from "@/types/rbac";
 import { Error as ErrorState } from "@/components/shared/Error";
-import { StatGrid } from "@/components/shared/statGrid";
+import StatCard from "@/components/shared/StatCard";
 
 export default async function HrDepartmentsPage() {
     const hr = await requireRole(["HR"]);
@@ -109,7 +109,11 @@ export default async function HrDepartmentsPage() {
                     )}
                 </div>
 
-                <StatGrid stats={stats} />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {stats.map((stat, i) => (
+                        <StatCard stat={stat} key={i} />
+                    ))}
+                </div>
 
                 <DepartmentsTable
                     departments={tableDepartments}

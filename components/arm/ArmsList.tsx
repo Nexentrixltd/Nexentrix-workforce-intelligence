@@ -110,9 +110,9 @@ export function ArmsList({ arms, candidates, readOnly = false }: Props) {
                                                 <p className="truncate text-sm font-semibold text-text-primary">
                                                     {arm.head.name}
                                                 </p>
-                                                {readOnly && (
+                                                {/* {readOnly && (
                                                     <p className="truncate text-xs text-muted-foreground">{arm.head.email}</p>
-                                                )}
+                                                )} */}
                                             </div>
                                             {!readOnly && (
                                                 <button

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { Error as ErrorState } from "@/components/shared/Error";
 import { ArmCard, ArmsList } from "@/components/arm/ArmsList";
+import StatCard from "@/components/shared/StatCard";
 
 export default async function AdminArmsPage() {
     await requireRole(["HR"]);
@@ -111,23 +112,9 @@ export default async function AdminArmsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    {stats.map((stat) => {
-                        const Icon = stat.icon;
-                        return (
-                            <div key={stat.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-500">{stat.title}</p>
-                                        <h2 className="mt-3 text-3xl font-bold tracking-tight">{stat.value.toLocaleString()}</h2>
-                                        <p className="mt-1 text-xs text-slate-400">{stat.subtitle}</p>
-                                    </div>
-                                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${stat.iconClass}`}>
-                                        <Icon size={21} />
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                    {stats.map((stat, i) => (
+                        <StatCard stat={stat} key={i} />
+                    ))}
                 </div>
 
                 <ArmsList arms={armCards} candidates={[]} readOnly />
