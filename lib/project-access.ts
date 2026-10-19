@@ -25,4 +25,6 @@ export const canEdit = (a: Actor) => a.role === "ADMIN";
 export const canDelete = (a: Actor) => a.role === "ADMIN";
 
 export const canManageMembers = (a: Actor, project: { leadId: string }) =>
-  a.role === "ADMIN" || (a.role === "TEAM_LEAD" && project.leadId === a.userId);
+  a.role === "ADMIN" ||
+  (project.leadId === a.userId &&
+    (a.role === "TEAM_LEAD" || a.role === "STAFF"));

@@ -9,6 +9,7 @@ import {
   PROJECT_ROLES,
 } from "@/lib/project-access";
 import { requireApiRole } from "@/lib/auth/session";
+import { notify } from "@/lib/notifications";
 
 type Ctx = { params: Promise<{ id: string; userId: string }> };
 
@@ -25,7 +26,7 @@ async function authorize(id: string) {
 
   const project = await prisma.project.findUnique({
     where: { id },
-    select: { leadId: true },
+    select: { leadId: true, name: true },
   });
   if (!project) return { error: notFound() };
   if (!canManageMembers(actor, project)) return { error: forbidden() };
@@ -71,6 +72,12 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   try {
     await prisma.projectMember.delete({
       where: { projectId_userId: { projectId: id, userId } },
+    });
+
+    await notify({
+      userId,
+      type: "PROJECT_REMOVED",
+      title: `You were removed from ${auth.project!.name}`,
     });
     return NextResponse.json({ ok: true });
   } catch (e: any) {

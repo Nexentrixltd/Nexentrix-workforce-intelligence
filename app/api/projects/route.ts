@@ -10,6 +10,7 @@ import {
   PROJECT_ROLES,
 } from "@/lib/project-access";
 import { requireApiRole } from "@/lib/auth/session";
+import { notify, projectHref } from "@/lib/notifications";
 
 export async function GET(req: Request) {
   const auth = await requireApiRole(PROJECT_ROLES);
@@ -54,7 +55,6 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-
   const auth = await requireApiRole(PROJECT_ROLES);
   if (!auth.ok) return auth.response;
   const actor = {
@@ -73,9 +73,13 @@ export async function POST(req: Request) {
   const d = parsed.data;
 
   const lead = await prisma.user.findUnique({ where: { id: d.leadId } });
-  if (!lead || lead.role !== "TEAM_LEAD")
+  if (
+    !lead ||
+    lead.deactivatedAt ||
+    !["TEAM_LEAD", "STAFF"].includes(lead.role)
+  )
     return NextResponse.json(
-      { error: { leadId: ["Lead must be a Team Lead"] } },
+      { error: { leadId: ["Lead must be a team lead or staff member"] } },
       { status: 400 },
     );
 
@@ -94,6 +98,14 @@ export async function POST(req: Request) {
           create: { userId: d.leadId, roleOnProject: "Project Lead" },
         },
       },
+    });
+
+    await notify({
+      userId: d.leadId,
+      type: "PROJECT_LEAD_ASSIGNED",
+      title: `You were made lead of ${project.name}`,
+      body: project.code,
+      href: projectHref("TEAM_LEAD", project.id),
     });
     return NextResponse.json(project, { status: 201 });
   } catch (e: any) {

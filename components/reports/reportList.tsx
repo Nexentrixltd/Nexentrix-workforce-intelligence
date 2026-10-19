@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Search, X } from "lucide-react";
+import { toast } from "sonner";
 
 type Report = {
   id: string;
@@ -19,9 +20,17 @@ type Report = {
   project: { id: string; name: string; code: string } | null;
   department: { name: string } | null;
   images: { id: string; width: number; height: number }[];
+  canReview: boolean;
+  reviewedAt: string | null;
+  reviewedBy: { name: string } | null;
 };
 
-type Result = { items: Report[]; total: number; pageSize: number };
+type Result = {
+  items: Report[];
+  total: number;
+  pageSize: number;
+  counts: { SUBMITTED: number; APPROVED: number; REJECTED: number };
+};
 type ProjectOption = { id: string; name: string };
 
 const STATUS = {
@@ -72,6 +81,98 @@ function DateTile({ iso }: { iso: string }) {
       <span className="text-lg font-semibold leading-none tabular-nums text-text-primary">
         {utc(iso, { day: "numeric" })}
       </span>
+    </div>
+  );
+}
+
+function ReviewPanel({
+  reportId,
+  onDone,
+}: {
+  reportId: string;
+  onDone: () => void;
+}) {
+  const qc = useQueryClient();
+  const [note, setNote] = useState("");
+  const [pending, setPending] = useState<"APPROVED" | "REJECTED" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(decision: "APPROVED" | "REJECTED") {
+    if (decision === "REJECTED" && note.trim().length < 5) {
+      setError("Tell them what to fix (at least 5 characters)");
+      return;
+    }
+    setError(null);
+    setPending(decision);
+
+    const res = await fetch(`/api/reports/${reportId}/review`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision, note: note.trim() || undefined }),
+    });
+    const body = await res.json().catch(() => ({}));
+    setPending(null);
+
+    if (!res.ok) {
+      const e = body.error;
+      toast.error(
+        typeof e === "string"
+          ? e
+          : e
+            ? ((Object.values(e)[0] as string[])?.[0] ?? "Could not save")
+            : "Could not save your decision",
+      );
+      if (res.status === 409) qc.invalidateQueries({ queryKey: ["reports"] });
+      return;
+    }
+
+    toast.success(decision === "APPROVED" ? "Report approved" : "Report rejected");
+    qc.invalidateQueries({ queryKey: ["reports"] });
+    onDone();
+  }
+
+  return (
+    <div className="mt-6 border-t border-border pt-5">
+      <label
+        htmlFor={`note-${reportId}`}
+        className="text-sm font-medium text-text-primary"
+      >
+        Your review
+      </label>
+      <textarea
+        id={`note-${reportId}`}
+        rows={3}
+        value={note}
+        onChange={(e) => {
+          setNote(e.target.value);
+          setError(null);
+        }}
+        placeholder="Add a note. Required if you reject."
+        className={`mt-1.5 w-full resize-y rounded-lg border bg-card px-3.5 py-3 text-sm text-text-primary transition placeholder:text-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/10 ${error ? "border-red-500" : "border-border focus:border-primary"
+          }`}
+      />
+      {error && (
+        <p className="mt-1.5 text-xs font-medium text-red-600">{error}</p>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={pending !== null}
+          onClick={() => submit("APPROVED")}
+          className="h-10 rounded-lg bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/30 disabled:opacity-60"
+        >
+          {pending === "APPROVED" ? "Approving..." : "Approve"}
+        </button>
+        <button
+          type="button"
+          disabled={pending !== null}
+          onClick={() => submit("REJECTED")}
+          className="h-10 rounded-lg border border-red-500/40 px-5 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-500/20 disabled:opacity-60 dark:text-red-400"
+        >
+          {pending === "REJECTED" ? "Rejecting..." : "Reject"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -173,21 +274,33 @@ export function ReportsList({ showAuthor, mineOnly = false }: Props) {
     <div>
       <div className="-mx-1 overflow-x-auto px-1">
         <div className="flex min-w-max gap-6 border-b border-border">
-          {TABS.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              aria-pressed={status === t.value}
-              onClick={() => update(() => setStatus(t.value))}
-              className={`-mb-px border-b-2 pb-3 text-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 ${
-                status === t.value
+          {TABS.map((t) => {
+            const c = data?.counts;
+            const count = c
+              ? t.value
+                ? c[t.value as keyof typeof c]
+                : c.SUBMITTED + c.APPROVED + c.REJECTED
+              : null;
+            return (
+              <button
+                key={t.value}
+                type="button"
+                aria-pressed={status === t.value}
+                onClick={() => update(() => setStatus(t.value))}
+                className={`-mb-px border-b-2 pb-3 text-sm transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 ${status === t.value
                   ? "border-primary font-semibold text-primary"
                   : "border-transparent text-muted-foreground hover:text-text-primary"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+                  }`}
+              >
+                {t.label}
+                {count != null && (
+                  <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -351,9 +464,8 @@ export function ReportsList({ showAuthor, mineOnly = false }: Props) {
                     <ChevronDown
                       size={18}
                       aria-hidden="true"
-                      className={`text-muted-foreground transition-transform ${
-                        expanded ? "rotate-180" : ""
-                      }`}
+                      className={`text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""
+                        }`}
                     />
                   </div>
                 </button>
@@ -374,11 +486,10 @@ export function ReportsList({ showAuthor, mineOnly = false }: Props) {
                     </p>
 
                     <div
-                      className={`grid gap-8 ${
-                        r.images.length > 0
-                          ? "lg:grid-cols-[minmax(0,1fr)_300px]"
-                          : ""
-                      }`}
+                      className={`grid gap-8 ${r.images.length > 0
+                        ? "lg:grid-cols-[minmax(0,1fr)_300px]"
+                        : ""
+                        }`}
                     >
                       <div className="space-y-5">
                         <Block title="Completed" text={r.tasksCompleted} />
@@ -424,6 +535,23 @@ export function ReportsList({ showAuthor, mineOnly = false }: Props) {
                         </div>
                       )}
                     </div>
+
+                    {r.status !== "SUBMITTED" && r.reviewedBy && (
+                      <p className="mt-6 text-xs text-muted-foreground">
+                        {r.status === "APPROVED" ? "Approved" : "Rejected"} by{" "}
+                        {r.reviewedBy.name}
+                        {r.reviewedAt &&
+                          `, ${new Date(r.reviewedAt).toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}`}
+                      </p>
+                    )}
+
+                    {r.canReview && r.status === "SUBMITTED" && (
+                      <ReviewPanel reportId={r.id} onDone={() => setOpen(null)} />
+                    )}
                   </div>
                 )}
               </li>

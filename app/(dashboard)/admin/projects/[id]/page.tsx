@@ -83,7 +83,6 @@ const DAY_PRESETS: { value: number; label: string }[] = [
 function optionsFor(current: number | null) {
   if (current == null || DAY_PRESETS.some((p) => p.value === current))
     return DAY_PRESETS;
-  // keep odd values (e.g. 30%) visible instead of silently dropping them
   return [
     ...DAY_PRESETS,
     { value: current, label: `${daysLabel(toDays(current))} a week` },
@@ -94,7 +93,7 @@ function loadTone(days: number) {
   if (days > WEEK_DAYS) return { bar: "bg-red-500", text: "text-red-600" };
   if (days > WEEK_DAYS * 0.8)
     return { bar: "bg-amber-500", text: "text-amber-600" };
-  return { bar: "bg-emerald-500", text: "text-gray-700" };
+  return { bar: "bg-emerald-500", text: "text-muted" };
 }
 
 function fmtDate(value?: string | null) {
@@ -136,7 +135,7 @@ async function request(url: string, method: string, body?: unknown) {
 }
 
 const smallInput =
-  "h-9 rounded-lg border border-gray-200 bg-white px-2.5 text-sm shadow-sm transition hover:border-gray-300 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10";
+  "h-9 rounded-lg bg-muted border border-border px-2.5 text-sm shadow-sm transition hover:border-gray-300 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10";
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -220,8 +219,8 @@ export default function ProjectDetailPage() {
   if (isLoading)
     return (
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-100" />
-        <div className="mt-6 h-32 animate-pulse rounded-xl bg-gray-100" />
+        <div className="h-8 w-64 animate-pulse rounded-lg bg-muted" />
+        <div className="mt-6 h-32 animate-pulse rounded-xl bg-muted" />
       </div>
     );
 
@@ -269,7 +268,6 @@ export default function ProjectDetailPage() {
         Back to projects
       </Link>
 
-      {/* Header */}
       <div className="mb-8 mt-4 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
@@ -290,13 +288,13 @@ export default function ProjectDetailPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setEditing(true)}
-              className="h-10 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-900 shadow-sm transition hover:border-gray-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/10"
+              className="h-10 rounded-lg border border-border bg-background px-4 text-sm font-medium text-muted-foreground shadow-sm transition hover:bg-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/10"
             >
               Edit project
             </button>
             <button
               onClick={deleteProject}
-              className="h-10 rounded-lg px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
+              className="h-10 rounded-lg px-4 text-sm font-medium text-red-600 transition hover:bg-red-500/30 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
             >
               Delete
             </button>
@@ -324,9 +322,8 @@ export default function ProjectDetailPage() {
         </div>
       ) : (
         <>
-          {/* Facts */}
           <section>
-            <dl className="grid divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white sm:grid-cols-4 sm:divide-x sm:divide-y-0">
+            <dl className="grid divide-y divide-border rounded-xl border border-border bg-muted sm:grid-cols-4 sm:divide-x sm:divide-y-0">
               {[
                 ["Lead", project.lead.name],
                 ["Department", project.department?.name ?? "None"],
@@ -334,24 +331,23 @@ export default function ProjectDetailPage() {
                 ["Ends", fmtDate(project.endDate)],
               ].map(([k, val]) => (
                 <div key={k} className="px-5 py-4">
-                  <dt className="text-sm text-muted-foreground">{k}</dt>
-                  <dd className="mt-1 font-medium text-gray-900">{val}</dd>
+                  <dt className="text-base text-muted-foreground">{k}</dt>
+                  <dd className="mt-1 font-medium text-text-primary">{val}</dd>
                 </div>
               ))}
             </dl>
 
             {project.description && (
-              <p className="mt-6 max-w-2xl whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
+              <p className="mt-6 max-w-2xl whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
                 {project.description}
               </p>
             )}
           </section>
 
-          {/* Team */}
           <section className="mt-12">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-text-primary">
                   Team ({project.members.length})
                 </h2>
                 <p className="mt-1 max-w-xl text-sm text-muted-foreground">
@@ -369,7 +365,7 @@ export default function ProjectDetailPage() {
               <select
                 value={newUserId}
                 onChange={(e) => setNewUserId(e.target.value)}
-                className="h-11 flex-1 rounded-lg border border-gray-200 bg-white px-3.5 text-sm shadow-sm transition hover:border-gray-300 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
+                className="h-11 flex-1 rounded-lg bg-muted px-3.5 text-sm shadow-sm transition hover:border-border focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
               >
                 <option value="">Select a person to add</option>
                 {candidates.map((u) => (
@@ -381,16 +377,16 @@ export default function ProjectDetailPage() {
               <button
                 disabled={!newUserId || addMember.isPending}
                 onClick={() => addMember.mutate(newUserId)}
-                className="h-11 rounded-lg bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 disabled:opacity-50"
+                className="h-11 rounded-lg bg-primary px-6 text-sm font-semibold text-text-primary shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 disabled:opacity-50"
               >
                 {addMember.isPending ? "Adding..." : "Add member"}
               </button>
             </div>
 
-            <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-muted">
               <table className="w-full min-w-170 text-left text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 text-xs text-muted-foreground">
+                  <tr className="border-b border-border text-xs text-muted-foreground">
                     <th className="px-5 py-3 font-medium">Person</th>
                     <th className="px-5 py-3 font-medium">Role on project</th>
                     <th className="px-5 py-3 font-medium">Time on project</th>
@@ -400,7 +396,7 @@ export default function ProjectDetailPage() {
                     <th className="px-5 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-border">
                   {project.members.map((m) => {
                     const isLead = m.userId === project.leadId;
                     const totalDays =
@@ -417,7 +413,7 @@ export default function ProjectDetailPage() {
                               {initials(m.name)}
                             </span>
                             <div className="min-w-0">
-                              <p className="truncate font-medium text-gray-900">
+                              <p className="truncate font-medium text-text-primary">
                                 {m.name}
                                 {isLead && (
                                   <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
@@ -485,7 +481,7 @@ export default function ProjectDetailPage() {
                                   </span>
                                 )}
                               </div>
-                              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted-foreground">
                                 <div
                                   className={`h-full rounded-full ${tone.bar}`}
                                   style={{

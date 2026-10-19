@@ -14,7 +14,7 @@ export default async function ChangePasswordPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="w-full max-w-md rounded-2xl border border-border bg-muted p-6 shadow-sm sm:p-8">
                 <h1 className="font-triakis text-3xl tracking-tight">Set your password</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
                     Welcome, {user.name}. For your security, replace the temporary

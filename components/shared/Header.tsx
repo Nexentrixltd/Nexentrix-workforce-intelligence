@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Bell, Search, X } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 import ThemeToggle from "./ThemeToggle";
+import { NotificationBell } from "../notifications/NotificationBell";
 
 const Header = () => {
   const user = useUserStore((state) => state.user);
@@ -60,14 +61,9 @@ const Header = () => {
           <Search className="h-5 w-5 text-primary" />
         </button>
 
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative cursor-pointer rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          <Bell className="h-5 w-5 text-primary" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500" />
-        </button>
+        {
+          user && <NotificationBell userId={user?.id}/>
+        }
 
         <ThemeToggle />
 

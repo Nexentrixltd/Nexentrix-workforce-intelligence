@@ -30,11 +30,11 @@ const STATUS_STYLE: Record<string, { label: string; dot: string }> = {
 };
 
 const inputBase =
-  "w-full rounded-lg border bg-white px-3.5 text-sm shadow-sm transition placeholder:text-gray-400 hover:border-gray-300 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10";
+  "w-full rounded-lg bg-muted focus:bg-background px-3.5 text-sm shadow-sm transition placeholder:text-gray-400 hover:border-gray-300 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10";
 const inputClass = (invalid?: boolean) =>
   `${inputBase} h-11 ${invalid ? "border-red-400" : "border-gray-200"}`;
 
-const labelClass = "mb-1.5 block text-sm font-medium text-gray-900";
+const labelClass = "mb-1.5 block text-sm font-medium text-text-primary";
 const hintClass = "mt-1.5 text-xs text-muted-foreground";
 const errorClass = "mt-1.5 text-xs font-medium text-red-600";
 
@@ -48,9 +48,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-gray-200 py-8 first:border-t-0 first:pt-0">
+    <section className="border-t border-border py-8 first:border-t-0 first:pt-0">
       <div className="mb-6">
-        <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+        <h2 className="text-base font-semibold text-text-primary">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       <div className="space-y-5">{children}</div>
@@ -93,7 +93,7 @@ export function ProjectForm({
     },
   });
 
-  const leads = options?.users.filter((u) => u.role === "TEAM_LEAD") ?? [];
+  const leads = options?.users ?? [];
   const descLength = watch("description")?.length ?? 0;
 
   return (
@@ -168,7 +168,7 @@ export function ProjectForm({
                   className="peer sr-only"
                   {...register("status")}
                 />
-                <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 shadow-sm transition hover:border-gray-300 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:font-medium peer-checked:text-primary peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20">
+                <span className="flex items-center gap-2 rounded-full border border-gray-200 bg-muted px-4 py-2 text-sm text-muted-foreground shadow-sm transition hover:border-gray-300 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:font-medium peer-checked:text-primary peer-focus-visible:ring-4 peer-focus-visible:ring-primary/20">
                   <span
                     className={`h-2 w-2 rounded-full ${STATUS_STYLE[s].dot}`}
                   />
@@ -225,7 +225,7 @@ export function ProjectForm({
               <option value="">Select a team lead</option>
               {leads.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.name}
+                  {u.name} ({u.role === "TEAM_LEAD" ? "team lead" : "staff"})
                 </option>
               ))}
             </select>
@@ -258,14 +258,13 @@ export function ProjectForm({
         </div>
       </Section>
 
-      {/* Action bar */}
-      <div className="sticky bottom-0 -mx-4 border-t border-gray-200 bg-white/85 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="sticky bottom-0 -mx-4 border-t border-border px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex items-center justify-end gap-3">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="h-11 rounded-lg px-5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
+              className="h-11 rounded-lg px-5 text-sm font-medium text-muted-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
             >
               Cancel
             </button>
@@ -273,7 +272,7 @@ export function ProjectForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="h-11 rounded-lg bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 disabled:opacity-60"
+            className="h-11 rounded-lg bg-primary px-6 text-sm font-semibold text-text-primary shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 disabled:opacity-60"
           >
             {isSubmitting ? "Saving..." : submitLabel}
           </button>

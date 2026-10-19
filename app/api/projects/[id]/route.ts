@@ -13,6 +13,7 @@ import {
   Actor,
 } from "@/lib/project-access";
 import { requireApiRole } from "@/lib/auth/session";
+import { notify, projectHref } from "@/lib/notifications";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -55,7 +56,8 @@ export async function GET(_req: Request, { params }: Ctx) {
   });
   if (!project) return notFound();
 
-  const showTotals = seesAll(actor);
+  const isLead = project.leadId === actor.userId;
+  const showTotals = seesAll(actor) || isLead;
 
   const members = project.members.map((m) => ({
     id: m.id,
@@ -92,11 +94,20 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const d = parsed.data;
 
   const lead = await prisma.user.findUnique({ where: { id: d.leadId } });
-  if (!lead || lead.role !== "TEAM_LEAD")
+  if (
+    !lead ||
+    lead.deactivatedAt ||
+    !["TEAM_LEAD", "STAFF"].includes(lead.role)
+  )
     return NextResponse.json(
-      { error: { leadId: ["Lead must be a Team Lead"] } },
+      { error: { leadId: ["Lead must be a team lead or staff member"] } },
       { status: 400 },
     );
+
+  const previous = await prisma.project.findUnique({
+    where: { id },
+    select: { leadId: true },
+  });
 
   try {
     const project = await prisma.$transaction(async (tx) => {
@@ -124,6 +135,15 @@ export async function PATCH(req: Request, { params }: Ctx) {
       });
       return updated;
     });
+
+    if (previous && previous.leadId !== d.leadId)
+      await notify({
+        userId: d.leadId,
+        type: "PROJECT_LEAD_ASSIGNED",
+        title: `You were made lead of ${project.name}`,
+        body: project.code,
+        href: projectHref("TEAM_LEAD", id),
+      });
     return NextResponse.json(project);
   } catch (e: any) {
     if (e.code === "P2002")

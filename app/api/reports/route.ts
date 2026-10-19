@@ -7,8 +7,12 @@ import {
   reportFolder,
 } from "@/lib/cloudinary";
 import { MAX_IMAGE_BYTES, reportSubmitSchema } from "@/lib/validations/reports";
-import { visibleReportsWhere } from "@/lib/reports/reports-access";
-import { Actor } from "@/lib/project-access";
+import {
+  canReviewReport,
+  ReportActor,
+  visibleReportsWhere,
+} from "@/lib/reports/reports-access";
+import { notify } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 const PAGE_SIZE = 15;
@@ -130,6 +134,41 @@ export async function POST(req: Request) {
       },
       select: { id: true },
     });
+
+    const recipients = new Set<string>();
+    if (user.departmentId) {
+      const leads = await prisma.user.findMany({
+        where: {
+          role: "TEAM_LEAD",
+          departmentId: user.departmentId,
+          deactivatedAt: null,
+        },
+        select: { id: true },
+      });
+      leads.forEach((l) => recipients.add(l.id));
+    }
+    let projectName = "General work";
+    if (projectId) {
+      const p = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { name: true, leadId: true },
+      });
+      if (p) {
+        projectName = p.name;
+        recipients.add(p.leadId);
+      }
+    }
+    recipients.delete(user.id);
+
+    await notify(
+      [...recipients].map((userId) => ({
+        userId,
+        type: "REPORT_SUBMITTED",
+        title: `${user.name} submitted a report`,
+        body: `${projectName}, ${d.reportDate}`,
+        href: "/team-lead/reports",
+      })),
+    );
   } catch (e: any) {
     if (e.code === "P2002")
       return NextResponse.json(
@@ -155,41 +194,41 @@ export async function GET(req: Request) {
   const mineOnly = sp.get("scope") === "mine";
   const page = Math.max(1, Number(sp.get("page")) || 1);
 
-  const actor: Actor & { departmentId: string | null } = {
+  const actor: ReportActor = {
     userId: user.id,
     role: user.role,
     departmentId: user.departmentId,
   };
 
+  const base = [
+    visibleReportsWhere(actor, mineOnly),
+    ...(projectId ? [{ projectId }] : []),
+    ...(from
+      ? [{ reportDate: { gte: new Date(`${from}T00:00:00.000Z`) } }]
+      : []),
+    ...(to ? [{ reportDate: { lte: new Date(`${to}T00:00:00.000Z`) } }] : []),
+    ...(q
+      ? [
+          {
+            OR: [
+              { tasksCompleted: { contains: q, mode: "insensitive" as const } },
+              { user: { name: { contains: q, mode: "insensitive" as const } } },
+            ],
+          },
+        ]
+      : []),
+  ];
+
   const where = {
     AND: [
-      visibleReportsWhere(actor, mineOnly),
+      ...base,
       ...(status && ["SUBMITTED", "APPROVED", "REJECTED"].includes(status)
         ? [{ status: status as any }]
-        : []),
-      ...(projectId ? [{ projectId }] : []),
-      ...(from
-        ? [{ reportDate: { gte: new Date(`${from}T00:00:00.000Z`) } }]
-        : []),
-      ...(to ? [{ reportDate: { lte: new Date(`${to}T00:00:00.000Z`) } }] : []),
-      ...(q
-        ? [
-            {
-              OR: [
-                {
-                  tasksCompleted: { contains: q, mode: "insensitive" as const },
-                },
-                {
-                  user: { name: { contains: q, mode: "insensitive" as const } },
-                },
-              ],
-            },
-          ]
         : []),
     ],
   };
 
-  const [items, total] = await Promise.all([
+  const [rows, total, grouped] = await Promise.all([
     prisma.report.findMany({
       where,
       orderBy: [{ reportDate: "desc" }, { createdAt: "desc" }],
@@ -197,6 +236,8 @@ export async function GET(req: Request) {
       take: PAGE_SIZE,
       select: {
         id: true,
+        userId: true,
+        departmentId: true,
         reportDate: true,
         status: true,
         hoursSpent: true,
@@ -206,14 +247,29 @@ export async function GET(req: Request) {
         blockers: true,
         tomorrowPriority: true,
         reviewNote: true,
-        user: { select: { id: true, name: true } },
-        project: { select: { id: true, name: true, code: true } },
+        reviewedAt: true,
+        reviewedBy: { select: { name: true } },
+        user: { select: { id: true, name: true, role: true } },
+        project: { select: { id: true, name: true, code: true, leadId: true } },
         department: { select: { name: true } },
         images: { select: { id: true, width: true, height: true } },
       },
     }),
     prisma.report.count({ where }),
+    prisma.report.groupBy({
+      by: ["status"],
+      where: { AND: base },
+      _count: { _all: true },
+    }),
   ]);
 
-  return NextResponse.json({ items, total, pageSize: PAGE_SIZE });
+  const counts = { SUBMITTED: 0, APPROVED: 0, REJECTED: 0 };
+  for (const g of grouped) counts[g.status] = g._count._all;
+
+  return NextResponse.json({
+    items: rows.map((r) => ({ ...r, canReview: canReviewReport(actor, r) })),
+    total,
+    pageSize: PAGE_SIZE,
+    counts,
+  });
 }

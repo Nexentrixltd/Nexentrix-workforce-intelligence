@@ -1,5 +1,6 @@
 import { ReportsList } from "@/components/reports/reportList";
 import { requireRole } from "@/lib/auth/session";
+import { Role } from "@/types/rbac";
 
 const SUBTITLE = {
     ADMIN: "Every report submitted across the group.",
@@ -8,9 +9,9 @@ const SUBTITLE = {
     STAFF: "The reports you have submitted.",
 } as const;
 
-export default async function ReportsPage() {
-    const user = await requireRole(["ADMIN", "HR", "TEAM_LEAD", "STAFF"]);
-    const role = user.role as keyof typeof SUBTITLE;
+export default async function ReportsPageView({role} : {role: Role}) {
+    const user = await requireRole([role]);
+    const Role = user.role as keyof typeof SUBTITLE;
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -19,7 +20,7 @@ export default async function ReportsPage() {
                     Reports
                 </h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                    {SUBTITLE[role] ?? ""}
+                    {SUBTITLE[Role] ?? ""}
                 </p>
             </div>
 

@@ -11,7 +11,7 @@ import {
 } from "@/lib/validations/password";
 
 const inputCls =
-    "w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm outline-none focus:border-primary";
+    "w-full rounded-md border border-border bg-muted px-3 py-2 pr-10 text-sm outline-none focus:border-primary";
 
 function PasswordField({
     id,
@@ -30,7 +30,7 @@ function PasswordField({
 
     return (
         <div>
-            <label htmlFor={id} className="block text-sm font-medium">
+            <label htmlFor={id} className="block text-sm font-medium text-text-primary">
                 {label}
             </label>
             <div className="relative mt-1">
@@ -45,7 +45,7 @@ function PasswordField({
                     type="button"
                     onClick={() => setVisible((v) => !v)}
                     aria-label={visible ? "Hide password" : "Show password"}
-                    className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-400 hover:text-slate-600"
+                    className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground"
                 >
                     {visible ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -131,7 +131,7 @@ export function ChangePasswordForm({ destination }: { destination: string }) {
             <button
                 type="button"
                 onClick={signOut}
-                className="mt-4 w-full text-center text-sm text-slate-500 hover:text-slate-700"
+                className="mt-4 w-full text-center text-sm text-muted-foreground hover:bg-muted py-2"
             >
                 Sign out
             </button>

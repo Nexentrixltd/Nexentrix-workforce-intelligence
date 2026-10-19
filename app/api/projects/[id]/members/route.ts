@@ -9,6 +9,7 @@ import {
   Actor,
 } from "@/lib/project-access";
 import { requireApiRole } from "@/lib/auth/session";
+import { notify, projectHref } from "@/lib/notifications";
 
 const addSchema = z.object({
   userId: z.string().min(1),
@@ -31,7 +32,7 @@ export async function POST(
 
   const project = await prisma.project.findUnique({
     where: { id },
-    select: { leadId: true },
+    select: { leadId: true, name: true },
   });
   if (!project) return notFound();
   if (!canManageMembers(actor, project)) return forbidden();
@@ -53,6 +54,19 @@ export async function POST(
         allocation: d.allocation ?? null,
       },
     });
+
+    const target = await prisma.user.findUnique({
+      where: { id: d.userId },
+      select: { role: true },
+    });
+    if (d.userId !== actor.userId)
+      await notify({
+        userId: d.userId,
+        type: "PROJECT_ADDED",
+        title: `You were added to ${project.name}`,
+        body: d.roleOnProject ? `Your role: ${d.roleOnProject}` : null,
+        href: projectHref(target?.role, id),
+      });
     return NextResponse.json(member, { status: 201 });
   } catch (e: any) {
     if (e.code === "P2002")
