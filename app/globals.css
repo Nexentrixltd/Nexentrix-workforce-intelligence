@@ -1,0 +1,268 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --font-body: var(--font-inter);
+  --font-heading: var(--font-triakis);
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --primary: #172554;
+  --primary-foreground: #ffffff;
+
+  --secondary: #eaf0f7;
+  --secondary-foreground: #172554;
+
+  --accent: #f4b740;
+  --accent-foreground: #172554;
+
+  --muted: #eef2f7;
+  --muted-foreground: #64748b;
+
+  --destructive: #dc2626;
+
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #d99a21;
+
+  --chart-1: #172554;
+  --chart-2: #f4b740;
+  --chart-3: #3b82f6;
+  --chart-4: #14b8a6;
+  --chart-5: #8b5cf6;
+
+  --radius: 0.75rem;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #172554;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fff7e6;
+  --sidebar-accent-foreground: #172554;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #d99a21;
+
+  --surface: #eef2f7;
+  --text-primary: #172554;
+
+  --gold: #f4b740;
+  --navy: #172554;
+  --black: #0f172a;
+  --white: #ffffff;
+
+  --status-success-bg: #064e3b;
+  --status-success-text: #6ee7b7;
+
+  --status-warning-bg: #78350f;
+  --status-warning-text: #fcd34d;
+
+  --status-danger-bg: #7f1d1d;
+  --status-danger-text: #fca5a5;
+
+  --status-info-bg: #172554;
+  --status-info-text: #93c5fd;
+
+  --status-neutral-bg: #1f2937;
+  --status-neutral-text: #cbd5e1;
+
+  --skeleton: #1b2942;
+  --skeleton-highlight: #293548;
+
+  --scrollbar-track: #0b1120;
+  --scrollbar-thumb: #334155;
+  --scrollbar-thumb-hover: #475569;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-surface: var(--surface);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted-foreground: var(--text-muted-foreground);
+  --color-gold: var(--gold);
+  --color-navy: var(--navy);
+  --color-black: var(--black);
+  --color-white: var(--white);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-text: var(--status-warning-text);
+}
+
+.dark {
+  --background: #0b1120;
+  --foreground: #f8fafc;
+
+  --card: #111827;
+  --card-foreground: #f8fafc;
+
+  --popover: #182641;
+  --popover-foreground: #f8fafc;
+
+  --primary: #fca311;
+  --primary-foreground: #0b1120;
+
+  --secondary: #1b2942;
+  --secondary-foreground: #f8fafc;
+
+  --accent: #243550;
+  --accent-foreground: #fca311;
+
+  --muted: #1b2942;
+  --muted-foreground: #aab6c8;
+
+  --destructive: #f87171;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --info: #38bdf8;
+
+  --border: #293548;
+  --input: #243147;
+  --ring: #fca311;
+
+  --chart-1: #fca311;
+  --chart-2: #38bdf8;
+  --chart-3: #34d399;
+  --chart-4: #a78bfa;
+  --chart-5: #fb7185;
+
+  --sidebar: #0e192c;
+  --sidebar-foreground: #e2e8f0;
+
+  --sidebar-primary: #fca311;
+  --sidebar-primary-foreground: #0b1120;
+
+  --sidebar-accent: #1b2942;
+  --sidebar-accent-foreground: #fca311;
+
+  --sidebar-border: #293548;
+  --sidebar-ring: #fca311;
+
+  --surface: #14213d;
+  --surface-hover: #1b2942;
+  --surface-elevated: #182641;
+
+  --text-primary: #f8fafc;
+  --text-muted-foreground: #aab6c8;
+  --text-accent: #fca311;
+
+  --gold: #fca311;
+  --navy: #14213d;
+  --black: #000000;
+  --white: #ffffff;
+
+  --status-success-bg: #064e3b;
+  --status-success-text: #6ee7b7;
+
+  --status-warning-bg: #78350f;
+  --status-warning-text: #fcd34d;
+
+  --status-danger-bg: #7f1d1d;
+  --status-danger-text: #fca5a5;
+
+  --status-info-bg: #172554;
+  --status-info-text: #93c5fd;
+
+  --status-neutral-bg: #1f2937;
+  --status-neutral-text: #cbd5e1;
+
+  --skeleton: #1b2942;
+  --skeleton-highlight: #293548;
+
+  --scrollbar-track: #0b1120;
+  --scrollbar-thumb: #334155;
+  --scrollbar-thumb-hover: #475569;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+  }
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--background);
+}
+
+.font-triakis {
+  font-family: var(--font-heading);
+}
+
+.input {
+  @apply w-full px-4 py-2.5 rounded-xl bg-surface border border-border text-primary outline-none focus:ring-2 focus:ring-primary/30;
+}
+
+.textarea {
+  @apply w-full px-4 py-2.5 rounded-xl bg-surface border border-border text-primary outline-none focus:ring-2 focus:ring-primary/30 min-h-25;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+button{
+  cursor: pointer;
+}
