@@ -33,6 +33,7 @@ import {
   IconSitemap,
   IconSitemapFilled,
 } from "@tabler/icons-react";
+import { Bell, ShieldCheck, UserRound } from "lucide-react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -220,6 +221,20 @@ export const dashboardNav: DashboardNavSection[] = [
         roles: ROLES.HR_ONLY,
       },
       {
+        label: "My Projects",
+        href: "/staff/projects",
+        iconOutline: IconFolders,
+        iconFilled: IconFolderFilled,
+        roles: ROLES.STAFF_ONLY,
+      },
+      {
+        label: "Projects",
+        href: "/team-lead/projects",
+        iconOutline: IconFolders,
+        iconFilled: IconFolderFilled,
+        roles: ROLES.TEAM_LEAD_ONLY,
+      },
+      {
         label: "Employees",
         href: "/hr/employees",
         iconOutline: IconUsers,
@@ -289,12 +304,33 @@ export const dashboardNav: DashboardNavSection[] = [
       },
       {
         label: "Settings",
-        href: "/dashboard/settings",
+        href: "/settings",
         iconOutline: IconSettings,
         iconFilled: IconSettingsFilled,
         roles: ROLES.ALL,
       },
     ],
+  },
+];
+
+export const settingsNav = [
+  {
+    label: "Profile",
+    href: "/settings/profile",
+    iconOutline: UserRound,
+    iconFilled: UserRound,
+  },
+  {
+    label: "Security",
+    href: "/settings/security",
+    iconOutline: ShieldCheck,
+    iconFilled: ShieldCheck,
+  },
+  {
+    label: "Notifications",
+    href: "/settings/notifications",
+    iconOutline: Bell,
+    iconFilled: Bell,
   },
 ];
 

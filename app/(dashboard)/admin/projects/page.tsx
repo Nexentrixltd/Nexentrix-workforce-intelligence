@@ -32,9 +32,14 @@ export default function AdminProjectsPage() {
     const [departmentId, setDepartmentId] = useState("");
     const user = useUserStore((s) => s.user)
 
-    const { data: options } = useQuery<{ departments: { id: string; name: string }[] }>({
+    const { data: options } = useQuery<{
+        departments: { id: string; name: string }[];
+    }>({
         queryKey: ["admin-project-options"],
-        queryFn: async () => (await fetch("/api/projects/options")).json(),
+        queryFn: async () => {
+            const res = await fetch("/api/projects/options");
+            return res.ok ? res.json() : { departments: [] };
+        },
     });
 
     // const { data, isLoading } = useQuery<Row[]>({
@@ -89,18 +94,20 @@ export default function AdminProjectsPage() {
                         </option>
                     ))}
                 </select>
-                <select
-                    value={departmentId}
-                    onChange={(e) => setDepartmentId(e.target.value)}
-                    className="rounded-md border px-3 bg-muted py-2 text-sm"
-                >
-                    <option value="">All departments</option>
-                    {options?.departments.map((d) => (
-                        <option key={d.id} value={d.id}>
-                            {d.name}
-                        </option>
-                    ))}
-                </select>
+                {options?.departments && options.departments.length > 0 && (
+                    <select
+                        value={departmentId}
+                        onChange={(e) => setDepartmentId(e.target.value)}
+                        className="rounded-md border bg-muted px-3 py-2 text-sm"
+                    >
+                        <option value="">All departments</option>
+                        {options.departments.map((d) => (
+                            <option key={d.id} value={d.id}>
+                                {d.name}
+                            </option>
+                        ))}
+                    </select>
+                )}
             </div>
 
             <ProjectsList basePath="/admin/projects" canCreate />

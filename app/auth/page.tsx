@@ -82,12 +82,12 @@ export default function AuthPage() {
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
 
-                    <Input
+                    <input
                       id="email"
                       type="email"
                       placeholder="Email"
                       {...register("email")}
-                      className="peer h-14 w-full rounded-none border-0 border-b border-border bg-transparent px-0 pl-8 text-sm text-foreground shadow-none transition-all placeholder:text-primary focus-visible:border-primary focus-visible:ring-0"
+                      className="peer h-14 w-full rounded-none border-0 border-b border-border bg-transparent px-0 pl-8 text-sm text-foreground shadow-none transition-all placeholder:text-muted-foreground focus-visible:border-primary outline-0 focus-visible:ring-0"
                     />
                   </div>
 
@@ -102,12 +102,12 @@ export default function AuthPage() {
                   <div className="relative">
                     <Lock className="pointer-events-none absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
 
-                    <Input
+                    <input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
                       {...register("password")}
-                      className="peer h-14 w-full rounded-none border-0 border-b border-border bg-transparent px-0 pl-8 pr-9 text-sm text-foreground shadow-none transition-all placeholder:text-primary focus-visible:border-primary focus-visible:ring-0"
+                      className="peer h-14 w-full rounded-none border-0 border-b border-border bg-transparent px-0 pl-8 pr-9 text-sm text-foreground shadow-none transition-all placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-0"
                     />
 
                     <button
@@ -192,14 +192,13 @@ export default function AuthPage() {
             <div className="space-y-5">
               <h1 className="flex flex-col font-triakis text-6xl leading-[0.95] tracking-tight">
                 <span>Nexentrix</span>
-                <span>Intelligent</span>
                 <span className="font-triakis text-accent">Workforce</span>
-                <span>Optimization.</span>
+                <span>Intelligence.</span>
               </h1>
             </div>
 
             <p className="border-l-2 border-accent/20 pl-6 text-lg font-medium leading-relaxed text-primary-foreground/70">
-              Bring clarity to your workforce. Nexentrix combines structured
+              Bring clarity to your workforce. Nexentrix workforce intelligence combines structured
               reporting, intelligent analytics, and real-time insights to help
               teams surface blockers, track progress, and drive consistent
               performance.

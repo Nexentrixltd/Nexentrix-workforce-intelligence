@@ -405,7 +405,7 @@ export function NotificationBell({ userId }: { userId: string }) {
 
                                 <div className="flex items-center justify-between py-3">
                                     <p className="text-sm text-muted-foreground">
-                                        {unread > 0 ? `${unread} unread` : "You're all caught up"}
+                                        {unread > 0 && `${unread} unread` }
                                     </p>
                                     {unread > 0 && (
                                         <button

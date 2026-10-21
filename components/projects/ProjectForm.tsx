@@ -19,6 +19,7 @@ type Props = {
   submitLabel: string;
   onSubmit: (values: ProjectInput) => Promise<void>;
   onCancel?: () => void;
+  limited?: boolean;
 };
 
 const STATUS_STYLE: Record<string, { label: string; dot: string }> = {
@@ -63,6 +64,7 @@ export function ProjectForm({
   submitLabel,
   onSubmit,
   onCancel,
+  limited
 }: Props) {
   const { data: options } = useQuery<Options>({
     queryKey: ["admin-project-options"],
@@ -71,6 +73,7 @@ export function ProjectForm({
       if (!res.ok) throw new Error("Failed to load options");
       return res.json();
     },
+    enabled: !limited,
   });
 
   const {
@@ -121,11 +124,17 @@ export function ProjectForm({
             </label>
             <input
               id="code"
-              className={`${inputClass(!!errors.code)} uppercase tabular-nums`}
+              readOnly={limited}
+              className={`${inputClass(!!errors.code)} uppercase tabular-nums ${limited ? "cursor-not-allowed opacity-70" : ""
+                }`}
               placeholder="NXT-2026-001"
               {...register("code")}
             />
-            {errors.code && <p className={errorClass}>{errors.code.message}</p>}
+            {errors.code ? (
+              <p className={errorClass}>{errors.code.message}</p>
+            ) : limited ? (
+              <p className={hintClass}>Only an admin can change the code.</p>
+            ) : null}
           </div>
         </div>
 
@@ -136,9 +145,8 @@ export function ProjectForm({
           <textarea
             id="description"
             rows={4}
-            className={`${inputBase} resize-y py-3 ${
-              errors.description ? "border-red-400" : "border-gray-200"
-            }`}
+            className={`${inputBase} resize-y py-3 ${errors.description ? "border-red-400" : "border-gray-200"
+              }`}
             placeholder="Goals, scope and what done looks like."
             {...register("description")}
           />
@@ -208,55 +216,59 @@ export function ProjectForm({
         </div>
       </Section>
 
-      <Section
-        title="Ownership"
-        description="Who is accountable and which department owns it."
-      >
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="leadId" className={labelClass}>
-              Project lead
-            </label>
-            <select
-              id="leadId"
-              className={inputClass(!!errors.leadId)}
-              {...register("leadId")}
-            >
-              <option value="">Select a team lead</option>
-              {leads.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role === "TEAM_LEAD" ? "team lead" : "staff"})
-                </option>
-              ))}
-            </select>
-            {errors.leadId ? (
-              <p className={errorClass}>{errors.leadId.message}</p>
-            ) : (
-              <p className={hintClass}>
-                The lead is added as a member automatically.
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="departmentId" className={labelClass}>
-              Owning department
-            </label>
-            <select
-              id="departmentId"
-              className={inputClass()}
-              {...register("departmentId")}
-            >
-              <option value="">No department</option>
-              {options?.departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            <p className={hintClass}>Members can come from any department.</p>
-          </div>
-        </div>
-      </Section>
+      {
+        !limited && (
+          <Section
+            title="Ownership"
+            description="Who is accountable and which department owns it."
+          >
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="leadId" className={labelClass}>
+                  Project lead
+                </label>
+                <select
+                  id="leadId"
+                  className={inputClass(!!errors.leadId)}
+                  {...register("leadId")}
+                >
+                  <option value="">Select a project lead</option>
+                  {leads.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role === "TEAM_LEAD" ? "team lead" : "staff"})
+                    </option>
+                  ))}
+                </select>
+                {errors.leadId ? (
+                  <p className={errorClass}>{errors.leadId.message}</p>
+                ) : (
+                  <p className={hintClass}>
+                    The lead is added as a member automatically.
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="departmentId" className={labelClass}>
+                  Owning department
+                </label>
+                <select
+                  id="departmentId"
+                  className={inputClass()}
+                  {...register("departmentId")}
+                >
+                  <option value="">No department</option>
+                  {options?.departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+                <p className={hintClass}>Members can come from any department.</p>
+              </div>
+            </div>
+          </Section>
+        )
+      }
 
       <div className="sticky bottom-0 -mx-4 border-t border-border px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex items-center justify-end gap-3">

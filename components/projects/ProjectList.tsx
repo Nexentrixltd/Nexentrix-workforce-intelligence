@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { PROJECT_STATUSES } from "@/lib/validations/project";
 import { STATUS, fmtDate } from "@/lib/projects/ui";
+import { useRouter } from "next/navigation";
 
 type Row = {
     id: string;
@@ -26,13 +26,7 @@ export function ProjectsList({ basePath, canCreate = false }: Props) {
     const [q, setQ] = useState("");
     const [status, setStatus] = useState("");
     const [departmentId, setDepartmentId] = useState("");
-
-    const { data: options } = useQuery<{
-        departments: { id: string; name: string }[];
-    }>({
-        queryKey: ["admin-project-options"],
-        queryFn: async () => (await fetch("/api/projects/options")).json(),
-    });
+    const router = useRouter();
 
     const { data, isLoading, isError } = useQuery<Row[]>({
         queryKey: ["admin-projects", q, status, departmentId],
@@ -101,10 +95,15 @@ export function ProjectsList({ basePath, canCreate = false }: Props) {
                         {data?.map((p) => {
                             const s = STATUS[p.status] ?? STATUS.PLANNING;
                             return (
-                                <tr key={p.id} className="transition hover:bg-muted">
+                                <tr
+                                    key={p.id}
+                                    onClick={() => router.push(`${basePath}/${p.id}`)}
+                                    className="cursor-pointer transition hover:bg-muted/50"
+                                >
                                     <td className="px-5 py-4">
                                         <Link
                                             href={`${basePath}/${p.id}`}
+                                            onClick={(e) => e.stopPropagation()}
                                             className="font-medium text-text-primary hover:text-primary"
                                         >
                                             {p.name}

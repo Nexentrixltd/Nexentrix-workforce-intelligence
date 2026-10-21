@@ -63,7 +63,7 @@ export async function POST(
       await notify({
         userId: d.userId,
         type: "PROJECT_ADDED",
-        title: `You were added to ${project.name}`,
+        title: `You were added to ${project.name} project`,
         body: d.roleOnProject ? `Your role: ${d.roleOnProject}` : null,
         href: projectHref(target?.role, id),
       });

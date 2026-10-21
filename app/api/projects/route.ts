@@ -72,7 +72,10 @@ export async function POST(req: Request) {
     );
   const d = parsed.data;
 
-  const lead = await prisma.user.findUnique({ where: { id: d.leadId } });
+  const lead = await prisma.user.findUnique({
+    where: { id: d.leadId },
+    select: { id: true, role: true, deactivatedAt: true },
+  });
   if (
     !lead ||
     lead.deactivatedAt ||
@@ -103,9 +106,9 @@ export async function POST(req: Request) {
     await notify({
       userId: d.leadId,
       type: "PROJECT_LEAD_ASSIGNED",
-      title: `You were made lead of ${project.name}`,
+      title: `You were made lead of ${project.name} project.`,
       body: project.code,
-      href: projectHref("TEAM_LEAD", project.id),
+      href: projectHref(lead.role, project.id),
     });
     return NextResponse.json(project, { status: 201 });
   } catch (e: any) {

@@ -151,11 +151,11 @@ export async function POST(req: Request) {
     if (projectId) {
       const p = await prisma.project.findUnique({
         where: { id: projectId },
-        select: { name: true, leadId: true },
+        select: { name: true, leadId: true, lead: { select: { role: true } } },
       });
       if (p) {
         projectName = p.name;
-        recipients.add(p.leadId);
+        if (p.lead.role === "TEAM_LEAD") recipients.add(p.leadId);
       }
     }
     recipients.delete(user.id);

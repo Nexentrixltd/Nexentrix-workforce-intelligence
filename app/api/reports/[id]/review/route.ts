@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth/session";
-import { reportsHref } from "@/lib/notifications";
+import { notify, reportsHref } from "@/lib/notifications";
 import { canReviewReport, ReportActor, visibleReportsWhere } from "@/lib/reports/reports-access";
 
 const schema = z
@@ -85,17 +85,16 @@ export async function PATCH(req: Request, { params }: Ctx) {
     timeZone: "UTC",
   });
 
-//   await notify({
-//     userId: report.userId,
-//     type: d.decision === "APPROVED" ? "REPORT_APPROVED" : "REPORT_REJECTED",
-//     title:
-//       d.decision === "APPROVED"
-//         ? `Your report for ${date} was approved`
-//         : `Your report for ${date} needs changes`,
-//     body: d.note || report.project?.name || "General work",
-//     href: reportsHref(report.user.role),
-//   });
-//  Todo: notify user
+  await notify({
+    userId: report.userId,
+    type: d.decision === "APPROVED" ? "REPORT_APPROVED" : "REPORT_REJECTED",
+    title:
+      d.decision === "APPROVED"
+        ? `Your report for ${date} was approved`
+        : `Your report for ${date} needs changes`,
+    body: d.note || report.project?.name || "General work",
+    href: reportsHref(report.user.role),
+  });
 
   return NextResponse.json({ status: d.decision });
 }

@@ -1,30 +1,31 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { projectSchema } from "@/lib/validations/project";
+import { requireApiRole } from "@/lib/auth/session";
 import {
-  unauthorized,
+  projectSchema,
+  projectLeadEditSchema,
+} from "@/lib/validations/project";
+import {
+  PROJECT_ROLES,
   forbidden,
   notFound,
   seesAll,
   visibleWhere,
   canEdit,
   canDelete,
-  PROJECT_ROLES,
-  Actor,
+  canManageMembers,
+  type Actor,
 } from "@/lib/project-access";
-import { requireApiRole } from "@/lib/auth/session";
 import { notify, projectHref } from "@/lib/notifications";
 
 type Ctx = { params: Promise<{ id: string }> };
 
+const IN_PROGRESS = ["PLANNING", "ACTIVE", "ON_HOLD"] as const;
+
 export async function GET(_req: Request, { params }: Ctx) {
   const auth = await requireApiRole(PROJECT_ROLES);
   if (!auth.ok) return auth.response;
-  const actor = {
-    userId: auth.user.id,
-    role: auth.user.role,
-  } as Actor;
-
+  const actor: Actor = { userId: auth.user.id, role: auth.user.role };
   const { id } = await params;
 
   const project = await prisma.project.findFirst({
@@ -41,11 +42,7 @@ export async function GET(_req: Request, { params }: Ctx) {
               name: true,
               role: true,
               projectMembers: {
-                where: {
-                  project: {
-                    status: { in: ["PLANNING", "ACTIVE", "ON_HOLD"] },
-                  },
-                },
+                where: { project: { status: { in: [...IN_PROGRESS] } } },
                 select: { allocation: true },
               },
             },
@@ -56,8 +53,7 @@ export async function GET(_req: Request, { params }: Ctx) {
   });
   if (!project) return notFound();
 
-  const isLead = project.leadId === actor.userId;
-  const showTotals = seesAll(actor) || isLead;
+  const showTotals = seesAll(actor) || project.leadId === actor.userId;
 
   const members = project.members.map((m) => ({
     id: m.id,
@@ -71,21 +67,55 @@ export async function GET(_req: Request, { params }: Ctx) {
       : null,
   }));
 
-  return NextResponse.json({ ...project, members });
+  const editable = canEdit(actor, project);
+
+  return NextResponse.json({
+    ...project,
+    members,
+    canManage: canManageMembers(actor, project),
+    canEdit: editable,
+    editScope: !editable ? null : actor.role === "ADMIN" ? "full" : "limited",
+  });
 }
 
 export async function PATCH(req: Request, { params }: Ctx) {
   const auth = await requireApiRole(PROJECT_ROLES);
   if (!auth.ok) return auth.response;
-  const actor = {
-    userId: auth.user.id,
-    role: auth.user.role,
-  } as Actor;
-
-  if (!canEdit(actor)) return forbidden();
+  const actor: Actor = { userId: auth.user.id, role: auth.user.role };
   const { id } = await params;
 
-  const parsed = projectSchema.safeParse(await req.json());
+  const existing = await prisma.project.findFirst({
+    where: { AND: [{ id }, visibleWhere(actor)] },
+    select: { id: true, leadId: true },
+  });
+  if (!existing) return notFound();
+  if (!canEdit(actor, existing)) return forbidden();
+
+  const body = await req.json().catch(() => null);
+
+  if (actor.role !== "ADMIN") {
+    const parsed = projectLeadEditSchema.safeParse(body);
+    if (!parsed.success)
+      return NextResponse.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 },
+      );
+    const d = parsed.data;
+
+    const project = await prisma.project.update({
+      where: { id },
+      data: {
+        name: d.name,
+        description: d.description || null,
+        status: d.status,
+        startDate: d.startDate ? new Date(d.startDate) : null,
+        endDate: d.endDate ? new Date(d.endDate) : null,
+      },
+    });
+    return NextResponse.json(project);
+  }
+
+  const parsed = projectSchema.safeParse(body);
   if (!parsed.success)
     return NextResponse.json(
       { error: parsed.error.flatten().fieldErrors },
@@ -93,7 +123,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
     );
   const d = parsed.data;
 
-  const lead = await prisma.user.findUnique({ where: { id: d.leadId } });
+  const lead = await prisma.user.findUnique({
+    where: { id: d.leadId },
+    select: { id: true, role: true, deactivatedAt: true },
+  });
   if (
     !lead ||
     lead.deactivatedAt ||
@@ -103,11 +136,6 @@ export async function PATCH(req: Request, { params }: Ctx) {
       { error: { leadId: ["Lead must be a team lead or staff member"] } },
       { status: 400 },
     );
-
-  const previous = await prisma.project.findUnique({
-    where: { id },
-    select: { leadId: true },
-  });
 
   try {
     const project = await prisma.$transaction(async (tx) => {
@@ -136,14 +164,15 @@ export async function PATCH(req: Request, { params }: Ctx) {
       return updated;
     });
 
-    if (previous && previous.leadId !== d.leadId)
+    if (existing.leadId !== d.leadId)
       await notify({
         userId: d.leadId,
         type: "PROJECT_LEAD_ASSIGNED",
-        title: `You were made lead of ${project.name}`,
+        title: `You were made lead of ${project.name} project.`,
         body: project.code,
-        href: projectHref("TEAM_LEAD", id),
+        href: projectHref(lead.role, id),
       });
+
     return NextResponse.json(project);
   } catch (e: any) {
     if (e.code === "P2002")
@@ -159,11 +188,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
 export async function DELETE(_req: Request, { params }: Ctx) {
   const auth = await requireApiRole(PROJECT_ROLES);
   if (!auth.ok) return auth.response;
-  const actor = {
-    userId: auth.user.id,
-    role: auth.user.role,
-  } as Actor;
-
+  const actor: Actor = { userId: auth.user.id, role: auth.user.role };
   if (!canDelete(actor)) return forbidden();
   const { id } = await params;
 

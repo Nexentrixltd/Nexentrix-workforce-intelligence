@@ -58,6 +58,7 @@ model User {
 
   reports         Report[] @relation("ReportAuthor")
   reviewedReports Report[] @relation("ReportReviewer")
+  reminderEnabled Boolean @default(true)
 
   @@index([departmentId])
   @@index([role, deactivatedAt])

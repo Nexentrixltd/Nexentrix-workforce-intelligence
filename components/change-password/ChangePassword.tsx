@@ -115,7 +115,7 @@ export function ChangePasswordForm({ destination }: { destination: string }) {
                     registration={register("confirmPassword")}
                 />
 
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                     At least 8 characters, with a letter and a number.
                 </p>
 

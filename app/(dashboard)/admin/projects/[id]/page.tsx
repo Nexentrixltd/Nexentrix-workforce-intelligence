@@ -14,7 +14,7 @@ type Member = {
   name: string;
   role: string;
   roleOnProject: string | null;
-  allocation: number | null; // stored as % (20 = 1 day a week)
+  allocation: number | null; 
   totalAllocation: number | null;
 };
 
