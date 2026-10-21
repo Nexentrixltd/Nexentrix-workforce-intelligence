@@ -125,6 +125,44 @@ function describeAgent(userAgent: string | null) {
     return "Unknown device";
 }
 
+function formatUserAgent(userAgent: string | null) {
+    if (!userAgent) return "Unknown browser";
+
+    let browser = "Unknown browser";
+    let version = "";
+
+    if (/Edg\//i.test(userAgent)) {
+        browser = "Microsoft Edge";
+        version = userAgent.match(/Edg\/([\d.]+)/i)?.[1] ?? "";
+    } else if (/OPR\//i.test(userAgent)) {
+        browser = "Opera";
+        version = userAgent.match(/OPR\/([\d.]+)/i)?.[1] ?? "";
+    } else if (/Firefox\//i.test(userAgent)) {
+        browser = "Firefox";
+        version = userAgent.match(/Firefox\/([\d.]+)/i)?.[1] ?? "";
+    } else if (/Chrome\//i.test(userAgent) && !/Edg\//i.test(userAgent)) {
+        browser = "Google Chrome";
+        version = userAgent.match(/Chrome\/([\d.]+)/i)?.[1] ?? "";
+    } else if (/Safari\//i.test(userAgent) && /Version\//i.test(userAgent)) {
+        browser = "Safari";
+        version = userAgent.match(/Version\/([\d.]+)/i)?.[1] ?? "";
+    }
+
+    const os = /Windows NT/i.test(userAgent)
+        ? "Windows"
+        : /Android/i.test(userAgent)
+            ? "Android"
+            : /iPhone|iPad|iPod/i.test(userAgent)
+                ? "iOS"
+                : /Mac OS X|Macintosh/i.test(userAgent)
+                    ? "macOS"
+                    : /Linux/i.test(userAgent)
+                        ? "Linux"
+                        : "Unknown OS";
+
+    return `${browser}${version ? ` ${version.split(".")[0]}` : ""} · ${os}`;
+}
+
 function passwordStrength(password: string) {
     if (!password) {
         return {
@@ -534,7 +572,6 @@ function DevicesCard() {
     const hasOthers = sessions.some(
         (session) => !session.current,
     );
-    console.log(sessionsQuery.data)
 
     const deleteSessionMutation = useMutation({
         mutationFn: (id: string) =>
@@ -585,7 +622,7 @@ function DevicesCard() {
                     description="Review devices that have signed in to your account."
                 />
 
-                {sessions.some((session) => !session.current) && (
+                {sessions.some((session) => hasOthers) && (
                     <button
                         type="button"
                         onClick={() => {
@@ -677,13 +714,13 @@ function DevicesCard() {
 
                                 <div className="min-w-0 flex-1 space-y-1.5">
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <h3 className="text-sm font-medium">
+                                        <h3 className="text-sm font-bold">
                                             {describeAgent(session.userAgent)}
                                         </h3>
                                     </div>
 
                                     <p className="wrap-break-word text-xs leading-5 text-muted-foreground">
-                                        {session.userAgent || "Unknown browser"}
+                                        {formatUserAgent(session.userAgent)}
                                     </p>
 
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
