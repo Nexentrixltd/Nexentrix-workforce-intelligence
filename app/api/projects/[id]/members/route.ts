@@ -9,7 +9,7 @@ import {
   Actor,
 } from "@/lib/project-access";
 import { requireApiRole } from "@/lib/auth/session";
-import { notify, projectHref } from "@/lib/notifications";
+import { notifyProjectMemberAdded } from "@/lib/notifications/events";
 
 const addSchema = z.object({
   userId: z.string().min(1),
@@ -37,7 +37,7 @@ export async function POST(
   if (!project) return notFound();
   if (!canManageMembers(actor, project)) return forbidden();
 
-  const parsed = addSchema.safeParse(await req.json());
+  const parsed = addSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success)
     return NextResponse.json(
       { error: parsed.error.flatten().fieldErrors },
@@ -55,18 +55,27 @@ export async function POST(
       },
     });
 
-    const target = await prisma.user.findUnique({
-      where: { id: d.userId },
-      select: { role: true },
-    });
-    if (d.userId !== actor.userId)
-      await notify({
-        userId: d.userId,
-        type: "PROJECT_ADDED",
-        title: `You were added to ${project.name} project`,
-        body: d.roleOnProject ? `Your role: ${d.roleOnProject}` : null,
-        href: projectHref(target?.role, id),
-      });
+    if (d.userId !== actor.userId) {
+      try {
+        const target = await prisma.user.findUnique({
+          where: { id: d.userId },
+          select: { role: true },
+        });
+        if (target)
+          await notifyProjectMemberAdded({
+            userId: d.userId,
+            userRole: target.role,
+            projectId: id,
+            projectName: project.name,
+            allocationDays: d.allocation
+              ? Math.round((d.allocation / 20) * 10) / 10
+              : null,
+          });
+      } catch (error) {
+        console.error("[projects] member notification failed", error);
+      }
+    }
+
     return NextResponse.json(member, { status: 201 });
   } catch (e: any) {
     if (e.code === "P2002")

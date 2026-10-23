@@ -1,5 +1,8 @@
 import Pusher from "pusher";
 import { prisma } from "@/lib/prisma";
+import { after } from "next/server";
+import { sendPush } from "@/lib/push";
+import { filterByPreferences } from "./notification-prefs";
 
 let instance: Pusher | null = null;
 
@@ -27,10 +30,13 @@ export type NotificationInput = {
 };
 
 export async function notify(input: NotificationInput | NotificationInput[]) {
-  const list = Array.isArray(input) ? input : [input];
-  if (list.length === 0) return;
+  const requested = Array.isArray(input) ? input : [input];
+  if (requested.length === 0) return;
 
   try {
+    const list = await filterByPreferences(requested).catch(() => requested);
+    if (list.length === 0) return;
+
     const created = await prisma.$transaction(
       list.map((n) =>
         prisma.notification.create({
@@ -57,7 +63,7 @@ export async function notify(input: NotificationInput | NotificationInput[]) {
 
     const pusher = getPusherServer();
     if (pusher) {
-      await Promise.allSettled(
+      const results = await Promise.allSettled(
         created.map((n) =>
           pusher.trigger(`private-user-${n.userId}`, "notification", {
             id: n.id,
@@ -70,6 +76,26 @@ export async function notify(input: NotificationInput | NotificationInput[]) {
           }),
         ),
       );
+      for (const r of results) {
+        if (r.status === "rejected")
+          console.error("pusher trigger failed", r.reason);
+      }
+    }
+
+    const push = () =>
+      sendPush(
+        created.map((i) => ({
+          userId: i.userId,
+          title: i.title,
+          body: i.body,
+          href: i.href,
+        })),
+      );
+
+    try {
+      after(push);
+    } catch {
+      await push();
     }
   } catch (e) {
     console.error("notify failed", e);

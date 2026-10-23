@@ -792,9 +792,15 @@ export default function SecuritySettingsPage() {
     return (
         <main className="w-full max-w-5xl space-y-6 p-4 sm:space-y-8 sm:p-6">
             <header className="space-y-2">
-                <h1 className="font-triakis text-3xl tracking-tight md:text-4xl">
-                    Security Settings
-                </h1>
+                <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                        <ShieldCheck size={22} />
+                    </div>
+
+                    <h1 className="font-triakis text-3xl tracking-tight md:text-4xl">
+                        Security Settings
+                    </h1>
+                </div>
 
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
                     Manage your password and review the devices connected to

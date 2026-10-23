@@ -79,7 +79,14 @@ export async function POST(req: Request) {
         where: { id: user.id },
         data: { lastLoginAt: new Date() },
       }),
-      recordLogin({ userId: user.id, email, success: true, ip, userAgent }),
+      recordLogin({
+        userId: user.id,
+        sessionId: session.id,
+        email,
+        success: true,
+        ip,
+        userAgent,
+      }),
     ]);
 
     const { passwordHash, ...safeUser } = user;

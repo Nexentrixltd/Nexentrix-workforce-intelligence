@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth/session";
-import { notify, reportsHref } from "@/lib/notifications";
-import { canReviewReport, ReportActor, visibleReportsWhere } from "@/lib/reports/reports-access";
+import {
+  canReviewReport,
+  ReportActor,
+  visibleReportsWhere,
+} from "@/lib/reports/reports-access";
+import { notifyReportReviewed } from "@/lib/notifications/events";
 
 const schema = z
   .object({
@@ -79,22 +83,21 @@ export async function PATCH(req: Request, { params }: Ctx) {
       { status: 409 },
     );
 
-  const date = report.reportDate.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  });
-
-  await notify({
-    userId: report.userId,
-    type: d.decision === "APPROVED" ? "REPORT_APPROVED" : "REPORT_REJECTED",
-    title:
-      d.decision === "APPROVED"
-        ? `Your report for ${date} was approved`
-        : `Your report for ${date} needs changes`,
-    body: d.note || report.project?.name || "General work",
-    href: reportsHref(report.user.role),
-  });
+  try {
+    await notifyReportReviewed({
+      report: {
+        id,
+        userId: report.userId,
+        reportDate: report.reportDate, 
+        projectName: report.project?.name ?? null,
+      },
+      status: d.decision,
+      reviewerName: auth.user.name,
+      note: d.note,
+    });
+  } catch (error) {
+    console.error("[reports] review notification failed", error);
+  }
 
   return NextResponse.json({ status: d.decision });
 }

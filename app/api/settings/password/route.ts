@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth/session";
 import { getCurrentSessionId } from "@/lib/auth/current-session";
+import { notifyPasswordChanged } from "@/lib/notifications/events";
 
 const schema = z.object({
   currentPassword: z.string().min(1, "Enter your current password"),
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
 
   const valid =
     !!user?.passwordHash &&
-    (await bcrypt.compare(currentPassword, user.passwordHash)); 
+    (await bcrypt.compare(currentPassword, user.passwordHash));
   if (!valid)
     return NextResponse.json(
       { error: { currentPassword: ["Your current password is incorrect"] } },
@@ -58,8 +59,10 @@ export async function POST(req: Request) {
 
   await prisma.user.update({
     where: { id: userId },
-    data: { passwordHash: await bcrypt.hash(newPassword, 12) }, 
+    data: { passwordHash: await bcrypt.hash(newPassword, 12) },
   });
+
+  await notifyPasswordChanged(userId);
 
   const currentId = await getCurrentSessionId();
   if (currentId)

@@ -247,9 +247,15 @@ const SettingsProfilePage = () => {
   return (
     <div className="w-full max-w-5xl space-y-8 p-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-triakis tracking-tight md:text-4xl">
-          Profile Settings
-        </h1>
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <UserRound size={22} />
+          </div>
+
+          <h1 className="font-triakis text-3xl tracking-tight md:text-4xl">
+            Profile Settings
+          </h1>
+        </div>
 
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
           Manage your profile photo and view your account information
@@ -299,7 +305,7 @@ const SettingsProfilePage = () => {
 
               {saving && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                  <LoaderCircle className="h-6 w-6 animate-spin text-white" />
+                  <LoaderCircle className="h-6 w-6 animate-spin" />
                 </div>
               )}
             </div>

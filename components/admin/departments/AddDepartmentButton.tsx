@@ -11,7 +11,6 @@ type Props = {
 
 export function AddDepartmentButton({ viewerRole, arms }: Props) {
   const [open, setOpen] = useState(false);
-  console.log(arms, viewerRole)
 
   return (
     <>

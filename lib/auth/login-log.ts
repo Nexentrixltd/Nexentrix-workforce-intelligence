@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { notifyIfNewDevice } from "../notifications/events";
 
 export function getClientInfo(req: Request) {
   const forwarded = req.headers.get("x-forwarded-for");
@@ -11,17 +12,55 @@ export function getClientInfo(req: Request) {
 
 export async function recordLogin(data: {
   userId?: string | null;
+  sessionId?: string | null;
   email: string;
   success: boolean;
   reason?: string;
   ip: string | null;
   userAgent: string | null;
 }) {
+  const { userId, sessionId, email, success, reason, ip, userAgent } = data;
+
   try {
     await prisma.loginEvent.create({
-      data: { ...data, email: data.email.slice(0, 254) },
+      data: {
+        email: email.slice(0, 254),
+        success,
+        reason,
+        ip,
+        userAgent,
+
+        ...(userId
+          ? {
+              user: {
+                connect: { id: userId },
+              },
+            }
+          : {}),
+
+        ...(sessionId
+          ? {
+              session: {
+                connect: { id: sessionId },
+              },
+            }
+          : {}),
+      },
     });
-  } catch (err) {
-    console.error("login log failed", err);
+
+    if (success && userId && sessionId) {
+      try {
+        await notifyIfNewDevice({
+          userId,
+          sessionId,
+          userAgent,
+          ip,
+        });
+      } catch (error) {
+        console.error("[auth] New-device notification failed:", error);
+      }
+    }
+  } catch (error) {
+    console.error("[auth] Login logging failed:", error);
   }
 }

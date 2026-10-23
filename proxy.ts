@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifySession } from "@/lib/auth/jwt";
 import { roleRoutes } from "./types/rbac";
+import { isSessionActive, sessionIdFromPayload } from "./lib/session-active";
 
 const access: Record<string, string[]> = {
   "/admin": ["ADMIN"],
@@ -10,15 +11,23 @@ const access: Record<string, string[]> = {
   "/team-lead": ["TEAM_LEAD", "ADMIN"],
 };
 
+function toLogin(req: NextRequest, clearCookie: boolean) {
+  const url = new URL("/auth", req.url);
+  url.searchParams.set("next", req.nextUrl.pathname + req.nextUrl.search);
+  const res = NextResponse.redirect(url);
+  if (clearCookie) res.cookies.delete("sessionToken");
+  return res;
+}
+
 export async function proxy(req: NextRequest) {
   const token = req.cookies.get("sessionToken")?.value;
   const session = token ? await verifySession(token) : null;
 
-  if (!session) {
-    const res = NextResponse.redirect(new URL("/auth", req.url));
-    if (token) res.cookies.delete("sessionToken"); 
-    return res;
-  }
+  if (!session) return toLogin(req, !!token);
+
+  const sessionId = sessionIdFromPayload(session);
+  if (sessionId && !(await isSessionActive(sessionId)))
+    return toLogin(req, true);
 
   const { pathname } = req.nextUrl;
   const section = Object.keys(access).find(
@@ -34,5 +43,11 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/hr/:path*", "/staff/:path*", "/team-lead/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/hr/:path*",
+    "/staff/:path*",
+    "/team-lead/:path*",
+    "/dashboard/:path*",
+  ],
 };

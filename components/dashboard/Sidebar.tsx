@@ -49,7 +49,6 @@ export default function DashboardSidebar() {
   const [isSettingsPageActive, setIsSettingsPageActive] =
     useState(false);
 
-  // Keep the correct navigation visible after refresh or direct navigation.
   useEffect(() => {
     setIsSettingsPageActive(
       pathname === "/settings" || pathname.startsWith("/settings/"),
@@ -146,7 +145,7 @@ export default function DashboardSidebar() {
               type="button"
               onClick={() => {
                 setIsSettingsPageActive(false);
-                router.push(`/${user?.role}/dashboard`);
+                router.push(`/${user?.role.toLowerCase()}/dashboard`);
               }}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
             >

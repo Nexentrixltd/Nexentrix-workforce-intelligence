@@ -54,11 +54,13 @@ model User {
   sessions    Session[]
   loginEvents LoginEvent[]
 
-  notifications Notification[] @relation("NotificationRecipient")
+  notifications    Notification[]     @relation("NotificationRecipient")
+  mutedNotifications String[] @default([])
+  PushSubscription PushSubscription[] @relation("PushSub")
 
   reports         Report[] @relation("ReportAuthor")
   reviewedReports Report[] @relation("ReportReviewer")
-  reminderEnabled Boolean @default(true)
+  reminderEnabled Boolean  @default(true)
 
   @@index([departmentId])
   @@index([role, deactivatedAt])
@@ -105,6 +107,7 @@ model Session {
   lastSeenAt DateTime  @default(now())
   expiresAt  DateTime
   revokedAt  DateTime?
+  loginEvent LoginEvent?
 
   @@index([userId, revokedAt])
   @@index([expiresAt])
@@ -120,6 +123,8 @@ model LoginEvent {
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
+  sessionId String?  @unique
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
   @@index([email, createdAt])
@@ -219,4 +224,17 @@ model Notification {
   createdAt DateTime  @default(now())
 
   @@index([userId, readAt, createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation("PushSub", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

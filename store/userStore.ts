@@ -75,8 +75,6 @@ export const useUserStore = create<ExtendedUserStore>((set, get) => ({
       }
       const me = await api.get("/auth/me");
 
-      console.log(me)
-
       set({
         user: me.data.user,
         hasFetchedUser: true,

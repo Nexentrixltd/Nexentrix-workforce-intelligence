@@ -9,7 +9,7 @@ import {
   PROJECT_ROLES,
 } from "@/lib/project-access";
 import { requireApiRole } from "@/lib/auth/session";
-import { notify } from "@/lib/notifications";
+import { notifyProjectMemberRemoved } from "@/lib/notifications/events";
 
 type Ctx = { params: Promise<{ id: string; userId: string }> };
 
@@ -31,7 +31,7 @@ async function authorize(id: string) {
   if (!project) return { error: notFound() };
   if (!canManageMembers(actor, project)) return { error: forbidden() };
 
-  return { project };
+  return { project, actor };
 }
 
 export async function PATCH(req: Request, { params }: Ctx) {
@@ -39,7 +39,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const auth = await authorize(id);
   if (auth.error) return auth.error;
 
-  const parsed = patchSchema.safeParse(await req.json());
+  const parsed = patchSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success)
     return NextResponse.json(
       { error: parsed.error.flatten().fieldErrors },
@@ -74,11 +74,17 @@ export async function DELETE(_req: Request, { params }: Ctx) {
       where: { projectId_userId: { projectId: id, userId } },
     });
 
-    await notify({
-      userId,
-      type: "PROJECT_REMOVED",
-      title: `You were removed from ${auth.project!.name}`,
-    });
+    if (userId !== auth.actor!.userId) {
+      try {
+        await notifyProjectMemberRemoved({
+          userId,
+          projectName: auth.project!.name,
+        });
+      } catch (error) {
+        console.error("[projects] removal notification failed", error);
+      }
+    }
+
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     if (e.code === "P2025") return notFound();

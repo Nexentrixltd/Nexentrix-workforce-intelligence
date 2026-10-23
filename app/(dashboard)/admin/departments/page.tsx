@@ -89,7 +89,6 @@ export default async function AdminDepartmentsPage() {
     members: department._count.members,
   }));
 
-  console.log(data, 'data')
   return (
     <div className="min-h-screen">
       <div className="mx-auto w-full md:max-w-7xl space-y-7">
