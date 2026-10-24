@@ -20,6 +20,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  async redirects() {
+    return [
+      {
+        source: "/settings",
+        destination: "/settings/profile",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

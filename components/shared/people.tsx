@@ -53,10 +53,10 @@ export function StatusBadge({ inactive }: { inactive: boolean }) {
     );
 }
 
-export function Avatar({ id, name }: { id: string; name: string }) {
+export function Avatar({ id, name, w = 10, h = 10, text = "white" }: { id: string; name: string; w?: number; h?: number; text?: string; }) {
     return (
         <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white ${colorFor(id)}`}
+            className={`flex h-${h} w-${w} shrink-0 items-center justify-center rounded text-sm font-bold text-${text} ${colorFor(id)}`}
         >
             {initials(name)}
         </div>

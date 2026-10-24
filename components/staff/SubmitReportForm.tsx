@@ -109,7 +109,7 @@ export default function SubmitReportForm() {
   const { min: minDate, max: maxDate } = reportDateRange();
   const qc = useQueryClient();
 
-  const { data: projects } = useQuery<ProjectOption[]>({
+  const { data: projects, isLoading, error } = useQuery<ProjectOption[]>({
     queryKey: ["my-projects"],
     queryFn: async () => {
       const res = await fetch("/api/projects");
@@ -330,55 +330,99 @@ export default function SubmitReportForm() {
         title="Report details"
         description="Which day and project this report covers."
       >
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="reportDate" className={labelClass}>
+
+        <div className="flex items-center gap-6">
+          <div className="flex w-full min-w-0 flex-col">
+            <label htmlFor="reportDate" className={`${labelClass} mb-2`}>
               Date
             </label>
+
             <input
               id="reportDate"
               type="date"
               min={minDate}
               max={maxDate}
-              className={inputClass(!!errors.reportDate)}
+              className={`${inputClass(!!errors.reportDate)} w-full`}
               {...register("reportDate")}
             />
+
             {errors.reportDate ? (
-              <p className={errorClass}>{errors.reportDate.message}</p>
+              <p className={`${errorClass} mt-2`}>
+                {errors.reportDate.message}
+              </p>
             ) : (
-              <p className={hintClass}>Today or up to 6 days earlier.</p>
+              <p className={`${hintClass} mt-2`}>
+                Today or up to 6 days earlier.
+              </p>
             )}
           </div>
 
-          <div>
-            <label htmlFor="projectId" className={labelClass}>
-              Project
-            </label>
+          <div className="flex w-full min-w-0 flex-col">
+            <div className="mb-2 flex min-h-6 items-center justify-between gap-2">
+              <label htmlFor="projectId" className={labelClass}>
+                Project
+              </label>
+
+              {isLoading && (
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+                  Loading...
+                </span>
+              )}
+            </div>
+
             <select
               id="projectId"
-              className={inputClass(!!errors.projectId || alreadySubmitted)}
+              disabled={isLoading}
+              aria-invalid={!!errors.projectId}
+              aria-describedby="projectId-message"
+              className={`${inputClass(!!errors.projectId || alreadySubmitted)} w-full`}
               {...register("projectId")}
             >
               <option value="" disabled={reportedProjectIds.has(null)}>
-                No project (general work)
-                {reportedProjectIds.has(null) ? " (already reported)" : ""}
+                {isLoading
+                  ? "Loading projects..."
+                  : `No project (general work)${reportedProjectIds.has(null) ? " (already reported)" : ""
+                  }`}
               </option>
-              {openProjects.map((p) => (
-                <option key={p.id} value={p.id} disabled={reportedProjectIds.has(p.id)}>
-                  {p.name}
-                  {reportedProjectIds.has(p.id) ? " (already reported)" : ""}
-                </option>
-              ))}
+
+              {!isLoading &&
+                openProjects.map((p) => (
+                  <option
+                    key={p.id}
+                    value={p.id}
+                    disabled={reportedProjectIds.has(p.id)}
+                  >
+                    {p.name}
+                    {reportedProjectIds.has(p.id) ? " (already reported)" : ""}
+                  </option>
+                ))}
             </select>
-            {errors.projectId ? (
-              <p className={errorClass}>{errors.projectId.message}</p>
-            ) : alreadySubmitted ? (
-              <p className={errorClass}>
-                You already reported on this for this date. Pick another project or date.
-              </p>
-            ) : (
-              <p className={hintClass}>One report per project each day.</p>
-            )}
+
+            <div
+              id="projectId-message"
+              aria-live="polite"
+              className="mt-2 min-h-5"
+            >
+              {isLoading ? (
+                <p className={hintClass}>
+                  Please wait while we load your available projects.
+                </p>
+              ) : errors.projectId ? (
+                <p className={errorClass} role="alert">
+                  {errors.projectId.message}
+                </p>
+              ) : alreadySubmitted ? (
+                <p className={errorClass} role="alert">
+                  You already reported on this for this date. Pick another project or
+                  date.
+                </p>
+              ) : (
+                <p className={hintClass}>
+                  One report per project each day.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

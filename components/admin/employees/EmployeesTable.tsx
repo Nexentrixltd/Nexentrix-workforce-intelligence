@@ -21,6 +21,7 @@ import { canManageUser } from "@/lib/permissions";
 import { Role } from "@/types/rbac";
 import { useUserStore } from "@/store/userStore";
 import { ROLE_STYLES } from "@/lib/utils";
+import { Avatar } from "@/components/shared/people";
 
 export type StaffRow = {
   id: string;
@@ -47,11 +48,6 @@ function colorFor(id: string) {
   let sum = 0;
   for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i);
   return AVATAR_COLORS[sum % AVATAR_COLORS.length];
-}
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
 function formatDate(value: string) {
@@ -108,7 +104,7 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
   const [toEdit, setToEdit] = useState<EmployeeToEdit | null>(null);
   const [toReset, setToReset] = useState<ResetTarget | null>(null);
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null);
-  const user = useUserStore((s)=> s.user)
+  const user = useUserStore((s) => s.user)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -325,13 +321,13 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
         ) : (
           <ul className="divide-y divide-border">
             {filtered.map((u) => (
-              <li key={u.id} className={`p-4 ${u.deactivatedAt ? "opacity-70" : ""}`}>
+              <li
+                key={u.id}
+                className={`p-4 ${u.deactivatedAt ? "opacity-70" : ""}`}
+              >
                 <div className="flex items-start gap-3">
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white ${colorFor(u.id)}`}
-                  >
-                    {initials(u.name)}
-                  </div>
+                  <Avatar id={u.id} name={u.name} />
+
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-semibold text-primary">
@@ -339,7 +335,11 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
                       </p>
                       <RoleBadge role={u.role} />
                     </div>
-                    <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+
+                    <p className="truncate text-xs text-muted-foreground">
+                      {u.email}
+                    </p>
+
                     {u.deactivatedAt && (
                       <div className="mt-1">
                         <InactiveBadge />
@@ -351,10 +351,12 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <DepartmentBadge department={u.department} />
+
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {formatDate(u.createdAt)}
                     </span>
                   </div>
+
                   {renderActions(u)}
                 </div>
               </li>
@@ -383,11 +385,7 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white ${colorFor(u.id)}`}
-                    >
-                      {initials(u.name)}
-                    </div>
+                    <Avatar id={u.id} name={u.name} />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="truncate text-sm font-semibold text-text-primary">

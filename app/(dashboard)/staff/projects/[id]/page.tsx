@@ -8,6 +8,7 @@ export default async function StaffProjectPage({
 }) {
     const user = await requireRole(["STAFF"]);
     const { id } = await params;
+
     return (
         <ProjectDetailView
             projectId={id}

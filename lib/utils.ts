@@ -364,3 +364,8 @@ export const ROLE_STYLES: Record<Role, { label: string; cls: string }> = {
     cls: "bg-slate-100 text-slate-700",
   },
 };
+
+// export function initials(name: string) {
+//   const parts = name.trim().split(/\s+/).filter(Boolean);
+//   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
+// }

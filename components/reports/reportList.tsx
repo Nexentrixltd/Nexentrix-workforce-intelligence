@@ -74,11 +74,11 @@ const utc = (iso: string, o: Intl.DateTimeFormatOptions) =>
 
 function DateTile({ iso }: { iso: string }) {
   return (
-    <div className="flex h-14 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-muted text-center">
-      <span className="text-xs text-muted-foreground">
+    <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded border border-border bg-primary text-center">
+      <span className="text-xs text-black">
         {utc(iso, { month: "short" })}
       </span>
-      <span className="text-lg font-semibold leading-none tabular-nums text-text-primary">
+      <span className="text-lg font-semibold leading-none tabular-nums text-black">
         {utc(iso, { day: "numeric" })}
       </span>
     </div>

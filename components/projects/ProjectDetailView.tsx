@@ -16,11 +16,14 @@ import {
 } from "@/lib/projects/ui";
 import { ProjectForm } from "@/components/projects/ProjectForm";
 import type { ProjectInput } from "@/lib/validations/project";
+import { Avatar } from "../shared/people";
+import { Spinner } from "../shared/spinner";
 
 type Member = {
     id: string;
     userId: string;
     name: string;
+    image: string;
     role: string;
     roleOnProject: string | null;
     allocation: number | null;
@@ -123,7 +126,7 @@ export function ProjectDetailView({
 
     const canManage = !!project?.canManage;
 
-    const { data: options } = useQuery<Options>({
+    const { data: options, isLoading: isOptionsLoading } = useQuery<Options>({
         queryKey: ["admin-project-options"],
         queryFn: () => request("/api/projects/options", "GET"),
         enabled: canManage,
@@ -312,9 +315,15 @@ export function ProjectDetailView({
 
                     {myLine && (
                         <div className="mt-6 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-5 py-4">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                {initials(me!.name)}
-                            </span>
+                            {
+                                me?.image ? (
+                                    <img
+                                        src={me?.image || ""}
+                                        alt={me?.name || "User"}
+                                        className="h-9 w-9 shrink-0 hidden md:flex rounded border border-border/50 object-cover sm:h-10 sm:w-10"
+                                    />
+                                ) : <Avatar id={me?.id || ''} name={me?.name || ''} />
+                            }
                             <p className="text-sm text-text-primary">{myLine}</p>
                         </div>
                     )}
@@ -327,7 +336,7 @@ export function ProjectDetailView({
                                 </h2>
                                 {canManage && (
                                     <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                                        Choose how many days a week each person spends on this
+                                        Choose how many days a week each employee spends on this
                                         project. The last column shows how many of their {WEEK_DAYS}{" "}
                                         days are booked across all projects.
                                     </p>
@@ -341,25 +350,107 @@ export function ProjectDetailView({
                         </div>
 
                         {canManage && (
-                            <div className="mt-5 flex gap-2">
-                                <select
-                                    value={newUserId}
-                                    onChange={(e) => setNewUserId(e.target.value)}
-                                    className="h-11 flex-1 rounded-lg border border-border bg-card px-3.5 text-sm text-text-primary shadow-sm transition hover:border-primary/40 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
-                                >
-                                    <option value="">Select a person to add</option>
-                                    {candidates.map((u) => (
-                                        <option key={u.id} value={u.id}>
-                                            {u.name} ({u.role.replace("_", " ").toLowerCase()})
+                            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                                <div className="relative min-w-0 flex-1">
+                                    <select
+                                        value={newUserId}
+                                        onChange={(e) => setNewUserId(e.target.value)}
+                                        disabled={isOptionsLoading || addMember.isPending}
+                                        aria-label="Select an employee to add"
+                                        className="h-11 w-full appearance-none rounded-lg border border-border bg-card px-3.5 pr-10 text-sm text-text-primary shadow-sm transition-all duration-200 hover:border-primary/40 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:bg-muted/30 disabled:opacity-70"
+                                    >
+                                        <option value="">
+                                            {isOptionsLoading
+                                                ? "Loading available employees..."
+                                                : candidates.length === 0
+                                                    ? "No employees available to add"
+                                                    : "Select an employee to add"}
                                         </option>
-                                    ))}
-                                </select>
+
+                                        {candidates.map((u) => (
+                                            <option key={u.id} value={u.id}>
+                                                {u.name} ({u.role.replace("_", " ").toLowerCase()})
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                                        {isOptionsLoading ? (
+                                            <Spinner className="h-4 w-4 text-primary" />
+                                        ) : (
+                                            <svg
+                                                className="h-4 w-4 text-text-secondary"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                                aria-hidden="true"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M5.22 7.22a.75.75 0 011.06 0L10 10.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 8.28a.75.75 0 010-1.06z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <button
-                                    disabled={!newUserId || addMember.isPending}
+                                    type="button"
+                                    disabled={
+                                        !newUserId ||
+                                        addMember.isPending ||
+                                        isOptionsLoading
+                                    }
                                     onClick={() => addMember.mutate(newUserId)}
-                                    className="h-11 rounded-lg bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 disabled:opacity-50"
+                                    className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                                 >
-                                    {addMember.isPending ? "Adding..." : "Add member"}
+                                    {addMember.isPending ? (
+                                        <>
+                                            <svg
+                                                className="h-4 w-4 animate-spin"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                aria-hidden="true"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-90"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                                />
+                                            </svg>
+
+                                            <span>Adding member...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg
+                                                className="h-4 w-4"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                                strokeWidth={2}
+                                                aria-hidden="true"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+
+                                            <span>Add member</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         )}
@@ -369,7 +460,7 @@ export function ProjectDetailView({
                                 <table className="w-full min-w-170 text-left text-sm">
                                     <thead>
                                         <tr className="border-b border-border text-xs text-muted-foreground">
-                                            <th className="px-5 py-3 font-medium">Person</th>
+                                            <th className="px-5 py-3 font-medium">Employee</th>
                                             <th className="px-5 py-3 font-medium">Role on project</th>
                                             <th className="px-5 py-3 font-medium">Time on project</th>
                                             <th className="px-5 py-3 font-medium">
@@ -391,9 +482,15 @@ export function ProjectDetailView({
                                                 <tr key={m.id} className="align-middle">
                                                     <td className="px-5 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                                                {initials(m.name)}
-                                                            </span>
+                                                            {
+                                                                m?.image ? (
+                                                                    <img
+                                                                        src={m?.image || ""}
+                                                                        alt={m?.name || "User"}
+                                                                        className="h-9 w-9 shrink-0 hidden md:flex rounded border border-border/50 object-cover sm:h-10 sm:w-10"
+                                                                    />
+                                                                ) : <Avatar id={m.id} name={m.name} />
+                                                            }
                                                             <div className="min-w-0">
                                                                 <p className="truncate font-medium text-text-primary">
                                                                     {m.name}

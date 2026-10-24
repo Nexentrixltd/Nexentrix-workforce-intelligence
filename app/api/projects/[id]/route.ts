@@ -32,7 +32,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     where: { AND: [{ id }, visibleWhere(actor)] },
     include: {
       department: { select: { id: true, name: true } },
-      lead: { select: { id: true, name: true } },
+      lead: { select: { id: true, name: true, image: true } },
       members: {
         orderBy: { joinedAt: "asc" },
         include: {
@@ -41,6 +41,7 @@ export async function GET(_req: Request, { params }: Ctx) {
               id: true,
               name: true,
               role: true,
+              image: true,
               projectMembers: {
                 where: { project: { status: { in: [...IN_PROGRESS] } } },
                 select: { allocation: true },
@@ -59,6 +60,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     id: m.id,
     userId: m.userId,
     name: m.user.name,
+    image: m.user.image ?? '',
     role: m.user.role,
     roleOnProject: m.roleOnProject,
     allocation: showTotals || m.userId === actor.userId ? m.allocation : null,
