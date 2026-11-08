@@ -54,13 +54,18 @@ model User {
   sessions    Session[]
   loginEvents LoginEvent[]
 
-  notifications    Notification[]     @relation("NotificationRecipient")
-  mutedNotifications String[] @default([])
-  PushSubscription PushSubscription[] @relation("PushSub")
+  notifications      Notification[]     @relation("NotificationRecipient")
+  mutedNotifications String[]           @default([])
+  PushSubscription   PushSubscription[] @relation("PushSub")
 
-  reports         Report[] @relation("ReportAuthor")
-  reviewedReports Report[] @relation("ReportReviewer")
-  reminderEnabled Boolean  @default(true)
+  reports           Report[]           @relation("ReportAuthor")
+  reviewedReports   Report[]           @relation("ReportReviewer")
+  reminderEnabled   Boolean            @default(true)
+  staffProfile      StaffProfile?
+  payroll           PayrollDetail?
+  staffDocuments    StaffDocument[]
+  signatory         SignatoryDetail?
+  emergencyContacts EmergencyContact[]
 
   @@index([departmentId])
   @@index([role, deactivatedAt])
@@ -98,13 +103,13 @@ model Department {
 }
 
 model Session {
-  id         String    @id @default(cuid())
+  id         String      @id @default(cuid())
   userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   ip         String?
   userAgent  String?
-  createdAt  DateTime  @default(now())
-  lastSeenAt DateTime  @default(now())
+  createdAt  DateTime    @default(now())
+  lastSeenAt DateTime    @default(now())
   expiresAt  DateTime
   revokedAt  DateTime?
   loginEvent LoginEvent?
@@ -237,4 +242,144 @@ model PushSubscription {
   user      User     @relation("PushSub", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+enum DetailStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model StaffProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  preferredName String?
+  phone         String?
+  altPhone      String?
+  personalEmail String?
+  addressLine   String?
+  city          String?
+  state         String?
+  country       String?
+  dateOfBirth   DateTime? @db.Date
+  gender        String?
+  maritalStatus String?
+  nationality   String?
+  stateOfOrigin String?
+  photoKey      String?
+
+  status       DetailStatus @default(PENDING)
+  reviewNote   String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status])
+}
+
+model EmergencyContact {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name         String
+  relationship String
+  phone        String
+  altPhone     String?
+  address      String?
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model PayrollDetail {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bankName         String
+  accountName      String
+  accountNumberEnc String
+  accountLast4     String
+  taxIdEnc         String?
+  pensionNumberEnc String?
+
+  status       DetailStatus @default(PENDING)
+  reviewNote   String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status])
+}
+
+model SignatoryDetail {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  signatoryName String
+  title         String?
+  signatureKey  String
+
+  status       DetailStatus @default(PENDING)
+  reviewNote   String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status])
+}
+
+model SensitiveAccessLog {
+  id           String   @id @default(cuid())
+  actorId      String
+  targetUserId String
+  field        String
+  reason       String?
+  ip           String?
+  createdAt    DateTime @default(now())
+
+  @@index([targetUserId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+enum DocumentType {
+  PASSPORT_PHOTO
+  APPOINTMENT_LETTER
+  EDUCATION_CERTIFICATE
+  NATIONAL_ID
+  DEFERRED_PAYMENT_FORM
+  EMPLOYEE_HANDBOOK
+  CV
+  OTHER
+}
+
+model StaffDocument {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      DocumentType
+  title     String?
+  fileKey   String
+  fileName  String
+  mimeType  String
+  sizeBytes Int
+
+  status       DetailStatus @default(PENDING)
+  reviewNote   String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId, type])
+  @@index([status])
 }

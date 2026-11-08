@@ -33,7 +33,18 @@ import {
   IconSitemap,
   IconSitemapFilled,
 } from "@tabler/icons-react";
-import { Bell, ShieldCheck, UserRound } from "lucide-react";
+import {
+  Bell,
+  FileText,
+  FolderOpen,
+  LayoutGrid,
+  PenTool,
+  PhoneCall,
+  Plane,
+  ShieldCheck,
+  UserRound,
+  Wallet,
+} from "lucide-react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -321,6 +332,12 @@ export const settingsNav = [
     iconFilled: UserRound,
   },
   {
+    label: "My Records",
+    href: "/settings/records",
+    iconOutline: FileText,
+    iconFilled: FileText,
+  },
+  {
     label: "Security",
     href: "/settings/security",
     iconOutline: ShieldCheck,
@@ -331,6 +348,45 @@ export const settingsNav = [
     href: "/settings/notifications",
     iconOutline: Bell,
     iconFilled: Bell,
+  },
+];
+
+export const recordsNav = [
+  {
+    label: "Overview",
+    href: "/settings/records",
+    iconOutline: LayoutGrid,
+    iconFilled: LayoutGrid,
+  },
+  {
+    label: "Personal",
+    href: "/settings/records/personal",
+    iconOutline: UserRound,
+    iconFilled: UserRound,
+  },
+  {
+    label: "Emergency contacts",
+    href: "/settings/records/emergency",
+    iconOutline: PhoneCall,
+    iconFilled: PhoneCall,
+  },
+  {
+    label: "Documents",
+    href: "/settings/records/documents",
+    iconOutline: FolderOpen,
+    iconFilled: FolderOpen,
+  },
+  {
+    label: "Payroll",
+    href: "/settings/records/payroll",
+    iconOutline: Wallet,
+    iconFilled: Wallet,
+  },
+  {
+    label: "Signatory",
+    href: "/settings/records/signatory",
+    iconOutline: PenTool,
+    iconFilled: PenTool,
   },
 ];
 
@@ -364,8 +420,3 @@ export const ROLE_STYLES: Record<Role, { label: string; cls: string }> = {
     cls: "bg-slate-100 text-slate-700",
   },
 };
-
-// export function initials(name: string) {
-//   const parts = name.trim().split(/\s+/).filter(Boolean);
-//   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
-// }

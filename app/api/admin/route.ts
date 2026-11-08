@@ -1,4 +1,4 @@
-import { requireApiRole, requireRole } from "@/lib/auth/session";
+import { requireApiRole } from "@/lib/auth/session";
 import { NextResponse } from "next/server";
 
 export async function GET() {
