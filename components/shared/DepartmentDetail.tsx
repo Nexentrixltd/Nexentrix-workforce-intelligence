@@ -39,6 +39,7 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
                         id: true,
                         name: true,
                         email: true,
+                        image: true,
                         role: true,
                         deactivatedAt: true,
                     },
@@ -133,7 +134,7 @@ export async function DepartmentDetail({ id, basePath, viewerRole, canEdit }: Pr
                                     className={`flex flex-wrap items-center gap-3 p-4 sm:px-6 ${u.deactivatedAt ? "opacity-70" : ""
                                         }`}
                                 >
-                                    <Avatar id={u.id} name={u.name} />
+                                    <Avatar id={u.id} name={u.name} imgURL={u.image || ''} />
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-semibold text-slate-800">{u.name}</p>
                                         <p className="truncate text-xs text-slate-500">{u.email}</p>

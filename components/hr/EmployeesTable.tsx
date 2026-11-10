@@ -16,15 +16,16 @@ export type HrEmployeeRow = {
     name: string;
     email: string;
     role: Role;
+    image: string | null;
     department: { id: string; name: string } | null;
     createdAt: string;
     deactivatedAt: string | null;
 };
 
 function DepartmentBadge({ department }: { department: HrEmployeeRow["department"] }) {
-    if (!department) return <span className="text-sm text-slate-400">None</span>;
+    if (!department) return <span className="text-sm text-muted-foreground">None</span>;
     return (
-        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+        <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
             {department.name}
         </span>
     );
@@ -65,7 +66,7 @@ export function EmployeesTable({
 
     const emptyState = (
         <div className="px-6 py-16 text-center">
-            <Filter size={30} className="mx-auto mb-3 text-slate-300" />
+            <Filter size={30} className="mx-auto mb-3 text-muted-foreground" />
             <p className="font-semibold text-slate-700">No employees found</p>
             <p className="mt-1 text-sm text-slate-500">Try a different search or filter.</p>
         </div>
@@ -76,7 +77,7 @@ export function EmployeesTable({
             <div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:p-5">
                 <div className="min-w-0">
                     <h2 className="text-lg font-bold">All Employees</h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-muted-foreground">
                         Read-only view. Account changes are handled by an administrator.
                     </p>
                 </div>
@@ -148,7 +149,7 @@ export function EmployeesTable({
                         {filtered.map((u) => (
                             <li key={u.id} className={`p-4 ${u.deactivatedAt ? "opacity-70" : ""}`}>
                                 <div className="flex items-start gap-3">
-                                    <Avatar id={u.id} name={u.name} />
+                                    <Avatar id={u.id} name={u.name} imgURL={u.image ? u.image : undefined} />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center justify-between gap-2">
                                             <p className="truncate text-sm font-semibold text-slate-800">
@@ -186,7 +187,7 @@ export function EmployeesTable({
                             <th className="whitespace-nowrap px-6 py-4">Date Added</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border">
                         {filtered.map((u) => (
                             <tr
                                 key={u.id}
@@ -195,7 +196,7 @@ export function EmployeesTable({
                             >
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <Avatar id={u.id} name={u.name} />
+                                        <Avatar id={u.id} name={u.name} imgURL={u.image ? u.image : undefined} />
                                         <div className="min-w-0">
                                             <p className="truncate text-sm font-semibold text-slate-800">
                                                 {u.id === user?.id ? "You" : u.name}

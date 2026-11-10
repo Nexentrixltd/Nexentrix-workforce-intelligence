@@ -46,6 +46,7 @@ import {
     type DocumentTypeKey,
 } from "@/lib/staff-records/documents";
 import { downscaleImage, sendJson, type FieldErrors } from "@/lib/records-client";
+import { formatBytes } from "@/lib/staff-records/format";
 
 const BASE = "/api/me/records/documents";
 
@@ -118,11 +119,6 @@ const formatDate = (iso: string) => {
     const [y, m, d] = iso.slice(0, 10).split("-");
     return `${Number(d)} ${MONTHS[Number(m) - 1]} ${y}`;
 };
-
-const formatBytes = (n: number) =>
-    n < 1024 * 1024
-        ? `${Math.max(1, Math.round(n / 1024))} KB`
-        : `${(n / 1024 / 1024).toFixed(1)} MB`;
 
 type Message = { type: "success" | "error"; text: string };
 type UploadResult = { ok: boolean; data: { error?: string; fieldErrors?: FieldErrors } };

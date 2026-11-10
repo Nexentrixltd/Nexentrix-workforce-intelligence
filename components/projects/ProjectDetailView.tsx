@@ -315,15 +315,7 @@ export function ProjectDetailView({
 
                     {myLine && (
                         <div className="mt-6 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-5 py-4">
-                            {
-                                me?.image ? (
-                                    <img
-                                        src={me?.image || ""}
-                                        alt={me?.name || "User"}
-                                        className="h-9 w-9 shrink-0 hidden md:flex rounded border border-border/50 object-cover sm:h-10 sm:w-10"
-                                    />
-                                ) : <Avatar id={me?.id || ''} name={me?.name || ''} />
-                            }
+                            <Avatar id={me?.id || ''} name={me?.name || ''} imgURL={me?.image || ''} className="h-9 w-9 shrink-0 hidden md:flex rounded border border-border/50 object-cover sm:h-10 sm:w-10" />
                             <p className="text-sm text-text-primary">{myLine}</p>
                         </div>
                     )}
@@ -482,15 +474,8 @@ export function ProjectDetailView({
                                                 <tr key={m.id} className="align-middle">
                                                     <td className="px-5 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            {
-                                                                m?.image ? (
-                                                                    <img
-                                                                        src={m?.image || ""}
-                                                                        alt={m?.name || "User"}
-                                                                        className="h-9 w-9 shrink-0 hidden md:flex rounded border border-border/50 object-cover sm:h-10 sm:w-10"
-                                                                    />
-                                                                ) : <Avatar id={m.id} name={m.name} />
-                                                            }
+                                                            <Avatar id={me?.id || ''} name={me?.name || ''} imgURL={me?.image || ''} className="h-9 w-9 shrink-0 hidden md:flex rounded border border-border/50 object-cover sm:h-10 sm:w-10" />
+                                                            
                                                             <div className="min-w-0">
                                                                 <p className="truncate font-medium text-text-primary">
                                                                     {m.name}

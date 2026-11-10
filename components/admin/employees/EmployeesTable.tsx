@@ -28,6 +28,7 @@ export type StaffRow = {
   name: string;
   email: string;
   role: Role;
+  image: string | null;
   department: { id: string; name: string } | null;
   createdAt: string;
   deactivatedAt: string | null;
@@ -326,7 +327,7 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
                 className={`p-4 ${u.deactivatedAt ? "opacity-70" : ""}`}
               >
                 <div className="flex items-start gap-3">
-                  <Avatar id={u.id} name={u.name} />
+                  <Avatar id={u.id} name={u.name} imgURL={u.image ? u.image : undefined} />
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
@@ -385,7 +386,7 @@ export function EmployeesTable({ users, departments, currentUserId, viewerRole }
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <Avatar id={u.id} name={u.name} />
+                    <Avatar id={u.id} name={u.name} imgURL={u.image ? u.image : undefined} className="h-10 w-10 rounded shrink-0" />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="truncate text-sm font-semibold text-text-primary">

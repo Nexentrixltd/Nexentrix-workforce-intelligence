@@ -8,6 +8,7 @@ import { LogOut, ChevronLeft, type LucideIcon } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
 import { cn, dashboardNav, settingsNav, recordsNav } from "@/lib/utils";
 import { Role } from "@/types/rbac";
+import { Avatar } from "../shared/people";
 
 type NavItem = {
   label: string;
@@ -288,11 +289,7 @@ export default function DashboardSidebar() {
 
       <div className="flex w-full flex-col items-start justify-between gap-4 p-4">
         <div className="flex w-full gap-2">
-          <img
-            src={user.image || "/assets/default-avatar.png"}
-            alt={user.name || "User"}
-            className="h-10 w-10 rounded object-cover border border-border/50"
-          />
+          <Avatar id={user.id} name={user.name} imgURL={user.image ? user.image : undefined} className="h-10 w-10 rounded object-cover border border-border/50" />
 
           <div className="flex min-w-0 flex-1 flex-col">
             <p className="truncate text-sm font-semibold">

@@ -126,9 +126,10 @@ export async function notifyReviewers(userId: string, label: string) {
           deactivatedAt: null,
           id: { not: userId },
         },
-        select: { id: true },
+        select: { id: true, role: true},
       }),
     ]);
+
     if (!staff || reviewers.length === 0) return;
 
     await notify(
@@ -137,7 +138,7 @@ export async function notifyReviewers(userId: string, label: string) {
         type: NOTIFY_TYPE,
         title: `${staff.name} submitted ${label} for review`,
         body: "Open their records to verify or reject.",
-        href: `/dashboard/hr/staff/${userId}/records`,
+        href: `${r.role === "ADMIN" ? '/admin/records' : `/hr/records/${userId}`}`,
       })),
     );
   } catch (err) {

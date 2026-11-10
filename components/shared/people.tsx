@@ -1,4 +1,4 @@
-import { ROLE_STYLES } from "@/lib/utils";
+import { cn, ROLE_STYLES } from "@/lib/utils";
 import { Role } from "@/types/rbac";
 
 
@@ -53,12 +53,20 @@ export function StatusBadge({ inactive }: { inactive: boolean }) {
     );
 }
 
-export function Avatar({ id, name, w = 10, h = 10, text = "white" }: { id: string; name: string; w?: number; h?: number; text?: string; }) {
+export function Avatar({ id, name, className, imgURL }: { id: string; name: string; className?: string; imgURL?: string }) {
     return (
-        <div
-            className={`flex h-${h} w-${w} shrink-0 items-center justify-center rounded text-sm font-bold text-${text} ${colorFor(id)}`}
-        >
-            {initials(name)}
-        </div>
+        imgURL ? (
+            <img
+                src={imgURL}
+                alt={name}
+                className={cn('shrink-0 object-cover', className)}
+            />
+        ) : (
+            <div
+                className={cn(`flex shrink-0 items-center justify-center rounded text-sm font-bold ${colorFor(id)}`, className)}
+            >
+                {initials(name)}
+            </div>
+        )
     );
 }
